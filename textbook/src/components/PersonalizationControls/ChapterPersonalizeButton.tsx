@@ -58,8 +58,16 @@ export function ChapterPersonalizeButton({
 
       const data = await response.json();
       setPersonalizedContent(data.personalized_content);
-      alert("Content personalized! Check the console for the adapted content.");
-      console.log("Personalized content:", data.personalized_content);
+
+      // Replace page content with personalized version
+      const articleEl =
+        document.querySelector("article") ||
+        document.querySelector(".markdown");
+      if (articleEl && data.personalized_content) {
+        articleEl.innerHTML =
+          `<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px;">✨ Personalized for your experience level</div>` +
+          `<div style="white-space: pre-wrap;">${data.personalized_content}</div>`;
+      }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Personalization failed";

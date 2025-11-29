@@ -55,8 +55,16 @@ export function ChapterTranslateButton({
       }
 
       const data = await response.json();
-      alert("Content translated to Urdu! Check the console.");
-      console.log("Translated content:", data.translated_content);
+
+      // Replace page content with translated version (RTL for Urdu)
+      const articleEl =
+        document.querySelector("article") ||
+        document.querySelector(".markdown");
+      if (articleEl && data.translated_content) {
+        articleEl.innerHTML =
+          `<div style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px;">🌐 Translated to Urdu</div>` +
+          `<div dir="rtl" style="text-align: right; font-family: 'Noto Nastaliq Urdu', serif; white-space: pre-wrap;">${data.translated_content}</div>`;
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Translation failed";
       setError(message);
