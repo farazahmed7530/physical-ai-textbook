@@ -5,7 +5,8 @@ import { themes as prismThemes } from "prism-react-renderer";
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 // GitHub Pages configuration - update these for your repository
-const organizationName = process.env.GITHUB_REPOSITORY_OWNER || "your-username";
+const organizationName =
+  process.env.GITHUB_REPOSITORY_OWNER || "farazahmed7530";
 const projectName = "physical-ai-textbook";
 
 const config: Config = {

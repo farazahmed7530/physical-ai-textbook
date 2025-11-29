@@ -45,43 +45,44 @@ This guide covers deploying the complete Physical AI Textbook platform.
 
 ---
 
-## Step 2: Deploy Backend to Render
+## Step 2: Deploy Backend to Koyeb (Free, No Card Required)
 
-### 2.1 Create Render Account
+### 2.1 Create Koyeb Account
 
-1. Go to [render.com](https://render.com)
-2. Sign up with your GitHub account
+1. Go to [koyeb.com](https://www.koyeb.com)
+2. Sign up with your GitHub account (recommended)
 
 ### 2.2 Create Web Service
 
-1. Click **"New"** → **"Web Service"**
-2. Connect your GitHub repository
-3. Configure the service:
+1. Click **"Create App"**
+2. Select **"GitHub"** as deployment method
+3. Connect your GitHub account if not already connected
+4. Select repository: `farazahmed7530/physical-ai-textbook`
+5. Configure the service:
 
 | Setting | Value |
 |---------|-------|
-| Name | `physical-ai-textbook-api` |
-| Region | Oregon (US West) |
+| App name | `physical-ai-textbook-api` |
 | Branch | `main` |
-| Root Directory | `backend` |
-| Runtime | Python 3 |
-| Build Command | `pip install -r requirements.txt` |
-| Start Command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
-| Instance Type | Free |
+| Root directory | `backend` |
+| Builder | `Buildpack` |
+| Run command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+| Instance type | `Free` (nano) |
+| Region | Washington, D.C. (or closest to you) |
 
 ### 2.3 Add Environment Variables
 
-In Render dashboard, go to **Environment** tab and add:
+In Koyeb dashboard, go to **Environment variables** section and add:
 
 ```
-OPENAI_API_KEY=<your-key>          # Only if using OpenAI
-GEMINI_API_KEY=<your-key>          # Only if using Gemini
-LLM_PROVIDER=gemini                # or "openai"
+GEMINI_API_KEY=<your-gemini-key>
+LLM_PROVIDER=gemini
 DATABASE_URL=<your-neon-url>
 QDRANT_URL=<your-qdrant-url>
 QDRANT_API_KEY=<your-qdrant-key>
 JWT_SECRET=<generate-a-random-string>
-CORS_ORIGINS=https://yourusername.github.io
+CORS_ORIGINS=https://farazahmed7530.github.io
+PORT=8000
 ```
 
 **Generate JWT_SECRET:**
@@ -89,18 +90,17 @@ CORS_ORIGINS=https://yourusername.github.io
 openssl rand -hex 32
 ```
 
-### 2.4 Get Deploy Hook URL (for GitHub Actions)
+### 2.4 Deploy
 
-1. In Render dashboard, go to **Settings** → **Deploy Hook**
-2. Click **"Create Deploy Hook"**
-3. Copy the URL
-4. Save this for GitHub secrets setup
+1. Click **"Deploy"**
+2. Wait for build to complete (2-5 minutes)
+3. Koyeb will auto-deploy on every push to main branch
 
 ### 2.5 Note Your Backend URL
 
-After deployment, Render gives you a URL like:
+After deployment, Koyeb gives you a URL like:
 ```
-https://physical-ai-textbook-api.onrender.com
+https://physical-ai-textbook-api-<your-username>.koyeb.app
 ```
 
 Save this - you'll need it for the frontend.
@@ -141,26 +141,20 @@ const API_URL = 'https://physical-ai-textbook-api.onrender.com';
 
 ---
 
-## Step 4: Configure GitHub Secrets
+## Step 4: Configure GitHub Secrets (Optional)
 
 Go to your GitHub repo → **Settings** → **Secrets and variables** → **Actions**
 
-### Repository Secrets (Required)
+### Repository Secrets (For CI tests)
 
 | Secret Name | Value |
 |-------------|-------|
-| `RENDER_DEPLOY_HOOK_URL` | Your Render deploy hook URL |
-| `OPENAI_API_KEY` | Your OpenAI key (if using) |
 | `GEMINI_API_KEY` | Your Gemini key (if using) |
 | `DATABASE_URL` | Your Neon connection string |
 | `QDRANT_URL` | Your Qdrant cluster URL |
 | `QDRANT_API_KEY` | Your Qdrant API key |
 
-### Repository Variables
-
-| Variable Name | Value |
-|---------------|-------|
-| `BACKEND_URL` | `https://physical-ai-textbook-api.onrender.com` |
+**Note:** Koyeb handles deployment automatically - no deploy hooks needed!
 
 ---
 
@@ -258,7 +252,7 @@ Visit: `https://yourusername.github.io/your-repo-name/`
 
 | Service | Free Tier Limits |
 |---------|------------------|
-| Render | 750 hours/month, sleeps after 15 min |
+| Koyeb | 1 service, 512MB RAM, no sleep! |
 | Neon | 0.5 GB storage, 1 project |
 | Qdrant Cloud | 1 GB storage, 1 cluster |
 | GitHub Pages | Unlimited for public repos |
