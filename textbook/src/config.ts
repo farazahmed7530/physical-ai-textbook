@@ -7,10 +7,10 @@
 
 // Backend API URL - Update this for production deployment
 // For local development: http://localhost:8000
-// For Render deployment: https://your-app-name.onrender.com
+// For Hugging Face Spaces: https://faraz7530-physical-ai-textbook-api.hf.space
 export const API_BASE_URL =
   typeof window !== "undefined" && window.location.hostname !== "localhost"
-    ? "https://physical-ai-textbook-api.onrender.com" // Production - UPDATE THIS
+    ? "https://faraz7530-physical-ai-textbook-api.hf.space" // Production
     : "http://localhost:8000"; // Development
 
 // API Endpoints
