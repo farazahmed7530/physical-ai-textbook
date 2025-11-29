@@ -6,6 +6,7 @@
  * - Stores user background preferences in database
  */
 
+import { useAuth } from "@site/src/components/AuthProvider";
 import React, { useCallback, useState } from "react";
 import styles from "./styles.module.css";
 import type { AuthResponse, FormErrors, RegistrationFormData } from "./types";
@@ -40,6 +41,7 @@ export function RegistrationForm({
   onSwitchToLogin,
   apiEndpoint,
 }: RegistrationFormProps): React.ReactElement {
+  const { register } = useAuth();
   const [formData, setFormData] = useState<RegistrationFormData>({
     email: "",
     password: "",
@@ -185,25 +187,9 @@ export function RegistrationForm({
     setErrors({});
 
     try {
-      const response = await fetch(`${apiEndpoint}/api/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          background: formData.background,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || "Registration failed");
-      }
-
-      const data: AuthResponse = await response.json();
-      onSuccess(data);
+      // Use the register function from AuthProvider which handles state
+      await register(formData.email, formData.password, formData.background);
+      onSuccess({} as AuthResponse); // Just to close the modal
     } catch (err) {
       const message =
         err instanceof Error

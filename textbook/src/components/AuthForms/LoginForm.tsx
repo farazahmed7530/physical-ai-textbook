@@ -6,6 +6,7 @@
  * - Displays generic error on failure (security)
  */
 
+import { useAuth } from "@site/src/components/AuthProvider";
 import React, { useCallback, useState } from "react";
 import styles from "./styles.module.css";
 import type { AuthResponse, FormErrors, LoginFormData } from "./types";
@@ -32,6 +33,7 @@ export function LoginForm({
   onSwitchToRegister,
   apiEndpoint,
 }: LoginFormProps): React.ReactElement {
+  const { login } = useAuth();
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
     password: "",
@@ -85,24 +87,9 @@ export function LoginForm({
     setErrors({});
 
     try {
-      const response = await fetch(`${apiEndpoint}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
-
-      if (!response.ok) {
-        // Security: Generic error message (Requirement 6.4)
-        throw new Error("Invalid credentials");
-      }
-
-      const data: AuthResponse = await response.json();
-      onSuccess(data);
+      // Use the login function from AuthProvider which handles state
+      await login(formData.email, formData.password);
+      onSuccess({} as AuthResponse); // Just to close the modal
     } catch (err) {
       // Security: Don't reveal specific failure reason
       setErrors({ general: "Invalid credentials. Please try again." });
