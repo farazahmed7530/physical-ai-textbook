@@ -5,13 +5,16 @@
  * update for different deployment environments.
  */
 
-// Backend API URL - Update this for production deployment
-// For local development: http://localhost:8000
-// For Hugging Face Spaces: https://faraz7530-physical-ai-textbook-api.hf.space
-export const API_BASE_URL =
-  typeof window !== "undefined" && window.location.hostname !== "localhost"
-    ? "https://faraz7530-physical-ai-textbook-api.hf.space" // Production
-    : "http://localhost:8000"; // Development
+// Detect if running in browser and check hostname
+const isProduction = (): boolean => {
+  if (typeof window === "undefined") return false;
+  return window.location.hostname !== "localhost";
+};
+
+// Backend API URL
+export const API_BASE_URL = isProduction()
+  ? "https://faraz7530-physical-ai-textbook-api.hf.space"
+  : "http://localhost:8000";
 
 // API Endpoints
 export const API_ENDPOINTS = {
