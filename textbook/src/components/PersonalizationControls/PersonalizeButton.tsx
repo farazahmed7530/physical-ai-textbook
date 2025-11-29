@@ -16,8 +16,8 @@ import type {
 } from "./types";
 
 // API endpoint configuration
-const API_ENDPOINT =
-  process.env.REACT_APP_API_ENDPOINT || "http://localhost:8000";
+import { API_BASE_URL } from "@site/src/config";
+const API_ENDPOINT = API_BASE_URL;
 
 // Icons as inline SVG components
 const PersonalizeIcon = () => (
