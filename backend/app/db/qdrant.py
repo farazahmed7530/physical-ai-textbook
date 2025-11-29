@@ -149,9 +149,9 @@ class QdrantDatabase:
         if not self._client:
             raise RuntimeError("Qdrant not connected. Call connect() first.")
 
-        results = await self._client.search(
+        results = await self._client.query_points(
             collection_name=self.settings.qdrant_collection_name,
-            query_vector=query_vector,
+            query=query_vector,
             limit=limit,
             score_threshold=score_threshold,
         )
@@ -162,7 +162,7 @@ class QdrantDatabase:
                 "score": result.score,
                 "payload": result.payload,
             }
-            for result in results
+            for result in results.points
         ]
 
     async def delete_vectors(self, ids: list[str | int]) -> None:

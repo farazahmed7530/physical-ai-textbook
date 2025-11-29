@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     # Get free API key at: https://aistudio.google.com/apikey
     gemini_api_key: str = ""
     gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
-    gemini_chat_model: str = "gemini-2.5-flash-preview-05-20"  # Latest free model
+    gemini_chat_model: str = "gemini-2.0-flash"  # Latest free model
     gemini_embedding_model: str = "text-embedding-004"
 
     # Authentication (JWT)
