@@ -45,65 +45,71 @@ This guide covers deploying the complete Physical AI Textbook platform.
 
 ---
 
-## Step 2: Deploy Backend to Koyeb (Free, No Card Required)
+## Step 2: Deploy Backend to Hugging Face Spaces (Free, No Card Required!)
 
-### 2.1 Create Koyeb Account
+### 2.1 Create Hugging Face Account
 
-1. Go to [koyeb.com](https://www.koyeb.com)
-2. Sign up with your GitHub account (recommended)
+1. Go to [huggingface.co](https://huggingface.co)
+2. Sign up (free, no card required)
 
-### 2.2 Create Web Service
+### 2.2 Create a New Space
 
-1. Click **"Create App"**
-2. Select **"GitHub"** as deployment method
-3. Connect your GitHub account if not already connected
-4. Select repository: `farazahmed7530/physical-ai-textbook`
-5. Configure the service:
+1. Click your profile → **"New Space"**
+2. Configure:
+   - **Space name:** `physical-ai-textbook-api`
+   - **License:** MIT
+   - **SDK:** Select **"Docker"**
+   - **Visibility:** Public (required for free tier)
+3. Click **"Create Space"**
 
-| Setting | Value |
-|---------|-------|
-| App name | `physical-ai-textbook-api` |
-| Branch | `main` |
-| Root directory | `backend` |
-| Builder | `Buildpack` |
-| Run command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
-| Instance type | `Free` (nano) |
-| Region | Washington, D.C. (or closest to you) |
+### 2.3 Upload Backend Code
 
-### 2.3 Add Environment Variables
-
-In Koyeb dashboard, go to **Environment variables** section and add:
-
-```
-GEMINI_API_KEY=<your-gemini-key>
-LLM_PROVIDER=gemini
-DATABASE_URL=<your-neon-url>
-QDRANT_URL=<your-qdrant-url>
-QDRANT_API_KEY=<your-qdrant-key>
-JWT_SECRET=<generate-a-random-string>
-CORS_ORIGINS=https://farazahmed7530.github.io
-PORT=8000
-```
-
-**Generate JWT_SECRET:**
+**Option A: Via Git (Recommended)**
 ```bash
-openssl rand -hex 32
+# Clone your new space
+git clone https://huggingface.co/spaces/YOUR_USERNAME/physical-ai-textbook-api
+cd physical-ai-textbook-api
+
+# Copy backend files
+cp -r /path/to/your/backend/* .
+
+# Rename README for HF
+mv README_HF.md README.md
+
+# Push to Hugging Face
+git add .
+git commit -m "Initial deployment"
+git push
 ```
 
-### 2.4 Deploy
+**Option B: Via Web UI**
+1. Go to your Space → Files tab
+2. Upload all files from the `backend/` folder
+3. Rename `README_HF.md` to `README.md`
 
-1. Click **"Deploy"**
-2. Wait for build to complete (2-5 minutes)
-3. Koyeb will auto-deploy on every push to main branch
+### 2.4 Add Environment Variables (Secrets)
+
+1. Go to your Space → **Settings** → **Repository secrets**
+2. Add these secrets:
+
+| Secret Name | Value |
+|-------------|-------|
+| `GEMINI_API_KEY` | Your Gemini API key |
+| `LLM_PROVIDER` | `gemini` |
+| `DATABASE_URL` | Your Neon PostgreSQL URL |
+| `QDRANT_URL` | Your Qdrant Cloud URL |
+| `QDRANT_API_KEY` | Your Qdrant API key |
+| `JWT_SECRET` | Run `openssl rand -hex 32` |
+| `CORS_ORIGINS` | `https://farazahmed7530.github.io` |
 
 ### 2.5 Note Your Backend URL
 
-After deployment, Koyeb gives you a URL like:
+After deployment, your API will be at:
 ```
-https://physical-ai-textbook-api-<your-username>.koyeb.app
+https://YOUR_USERNAME-physical-ai-textbook-api.hf.space
 ```
 
-Save this - you'll need it for the frontend.
+Example: `https://farazahmed7530-physical-ai-textbook-api.hf.space`
 
 ---
 
@@ -252,10 +258,10 @@ Visit: `https://yourusername.github.io/your-repo-name/`
 
 | Service | Free Tier Limits |
 |---------|------------------|
-| Koyeb | 1 service, 512MB RAM, no sleep! |
+| Hugging Face Spaces | Free for public spaces, 2 vCPU, 16GB RAM |
 | Neon | 0.5 GB storage, 1 project |
 | Qdrant Cloud | 1 GB storage, 1 cluster |
 | GitHub Pages | Unlimited for public repos |
 | Gemini | 15 RPM, 1M tokens/day |
 
-This setup is completely free for learning/demo purposes!
+This setup is completely free for learning/demo purposes! No credit card required!
