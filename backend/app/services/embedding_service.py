@@ -218,17 +218,22 @@ class EmbeddingService:
         results = []
         for i, text in enumerate(texts):
             embedding_data = response.data[i]
+            # Handle case where usage is None (Gemini API)
+            token_count = 0
+            if response.usage and response.usage.prompt_tokens:
+                token_count = response.usage.prompt_tokens // len(texts)
             results.append(
                 EmbeddingResult(
                     text=text,
                     embedding=embedding_data.embedding,
-                    token_count=response.usage.prompt_tokens // len(texts),  # Approximate per-text
+                    token_count=token_count,
                 )
             )
 
+        total_tokens = response.usage.total_tokens if response.usage else 0
         logger.debug(
             f"Generated {len(results)} embeddings, "
-            f"total tokens: {response.usage.total_tokens}"
+            f"total tokens: {total_tokens}"
         )
 
         return results
