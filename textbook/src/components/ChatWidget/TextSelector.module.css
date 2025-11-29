@@ -1,0 +1,70 @@
+/**
+ * TextSelector tooltip styles
+ */
+
+.tooltip {
+  position: fixed;
+  transform: translateX(-50%) translateY(-100%);
+  z-index: 1001;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-100%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-100%) scale(1);
+  }
+}
+
+.askButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--ifm-color-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.2s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.askButton:hover {
+  background: var(--ifm-color-primary-dark);
+  transform: scale(1.02);
+}
+
+.askButton:active {
+  transform: scale(0.98);
+}
+
+.askIcon {
+  font-size: 14px;
+}
+
+.tooltipArrow {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid var(--ifm-color-primary);
+}
+
+/* Keyboard shortcut hint */
+.shortcutHint {
+  font-size: 10px;
+  opacity: 0.8;
+  margin-left: 4px;
+}

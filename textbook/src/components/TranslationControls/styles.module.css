@@ -1,0 +1,246 @@
+/**
+ * TranslationControls styles
+ * Requirements: 8.1, 8.3
+ */
+
+/* Translate button */
+.translateButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--ifm-color-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s, transform 0.2s;
+}
+
+.translateButton:hover:not(:disabled) {
+  background: var(--ifm-color-primary-dark);
+  transform: translateY(-1px);
+}
+
+.translateButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.translateButton svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Loading spinner */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Translated content indicator */
+.translatedIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--ifm-color-info-lightest);
+  border: 1px solid var(--ifm-color-info-light);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+[data-theme='dark'] .translatedIndicator {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: var(--ifm-color-info-dark);
+}
+
+.indicatorContent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.indicatorIcon {
+  width: 20px;
+  height: 20px;
+  color: var(--ifm-color-info-dark);
+}
+
+[data-theme='dark'] .indicatorIcon {
+  color: var(--ifm-color-info-light);
+}
+
+.indicatorText {
+  font-size: 14px;
+  color: var(--ifm-color-info-darker);
+}
+
+[data-theme='dark'] .indicatorText {
+  color: var(--ifm-color-info-light);
+}
+
+.languageLabel {
+  font-weight: 600;
+}
+
+.cacheIndicator {
+  font-size: 12px;
+  color: var(--ifm-color-emphasis-600);
+  margin-left: 8px;
+}
+
+.viewOriginalButton {
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--ifm-color-info-dark);
+  border: 1px solid var(--ifm-color-info-dark);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+[data-theme='dark'] .viewOriginalButton {
+  color: var(--ifm-color-info-light);
+  border-color: var(--ifm-color-info-light);
+}
+
+.viewOriginalButton:hover {
+  background: var(--ifm-color-info-dark);
+  color: white;
+}
+
+[data-theme='dark'] .viewOriginalButton:hover {
+  background: var(--ifm-color-info-light);
+  color: var(--ifm-color-info-darkest);
+}
+
+/* Error message */
+.errorMessage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+[data-theme='dark'] .errorMessage {
+  background: #450a0a;
+  color: #fca5a5;
+}
+
+.errorIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.dismissError {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.dismissError:hover {
+  opacity: 1;
+}
+
+/* Controls container */
+.controlsContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* Translated content wrapper with RTL support */
+.translatedContentWrapper {
+  position: relative;
+}
+
+.translatedContent {
+  /* Content inherits page styles */
+}
+
+/* RTL content styles for Urdu - Requirements: 8.3 */
+.rtlContent {
+  direction: rtl;
+  text-align: right;
+  font-family: 'Noto Nastaliq Urdu', 'Jameel Noori Nastaleeq', 'Noto Sans Arabic', serif;
+  line-height: 1.8;
+}
+
+.rtlContent code,
+.rtlContent pre {
+  direction: ltr;
+  text-align: left;
+  font-family: 'Fira Code', 'Consolas', monospace;
+}
+
+.rtlContent pre {
+  overflow-x: auto;
+}
+
+.rtlContent h1,
+.rtlContent h2,
+.rtlContent h3,
+.rtlContent h4,
+.rtlContent h5,
+.rtlContent h6 {
+  text-align: right;
+}
+
+.rtlContent ul,
+.rtlContent ol {
+  padding-right: 2em;
+  padding-left: 0;
+}
+
+.rtlContent li {
+  text-align: right;
+}
+
+.rtlContent table {
+  direction: rtl;
+}
+
+.rtlContent th,
+.rtlContent td {
+  text-align: right;
+}
+
+.rtlContent blockquote {
+  border-right: 4px solid var(--ifm-color-emphasis-300);
+  border-left: none;
+  padding-right: 1em;
+  padding-left: 0;
+  margin-right: 0;
+}
+
+.rtlContent .math,
+.rtlContent .katex {
+  direction: ltr;
+}

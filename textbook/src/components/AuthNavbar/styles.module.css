@@ -1,0 +1,157 @@
+/**
+ * AuthNavbarItem styles
+ * Requirements: 6.1, 6.2
+ */
+
+/* Container for auth buttons */
+.authContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Loading text */
+.loadingText {
+  font-size: 14px;
+  color: var(--ifm-color-emphasis-600);
+}
+
+/* User email display */
+.userEmail {
+  font-size: 14px;
+  color: var(--ifm-font-color-base);
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Login button */
+.loginButton {
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ifm-color-primary);
+  background: transparent;
+  border: 1px solid var(--ifm-color-primary);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.loginButton:hover {
+  background: var(--ifm-color-primary);
+  color: white;
+}
+
+/* Register button */
+.registerButton {
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  background: var(--ifm-color-primary);
+  border: 1px solid var(--ifm-color-primary);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.registerButton:hover {
+  background: var(--ifm-color-primary-dark);
+  border-color: var(--ifm-color-primary-dark);
+}
+
+/* Logout button */
+.logoutButton {
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ifm-color-emphasis-700);
+  background: transparent;
+  border: 1px solid var(--ifm-color-emphasis-400);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.logoutButton:hover {
+  background: var(--ifm-color-emphasis-100);
+  border-color: var(--ifm-color-emphasis-500);
+}
+
+/* Modal overlay */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 16px;
+}
+
+/* Modal content */
+.modalContent {
+  background: var(--ifm-background-color);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+/* Modal header */
+.modalHeader {
+  position: relative;
+  height: 40px;
+}
+
+/* Close button */
+.closeButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--ifm-color-emphasis-600);
+  border-radius: 50%;
+  transition: background-color 0.2s;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  background: var(--ifm-color-emphasis-100);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .authContainer {
+    gap: 4px;
+  }
+
+  .loginButton,
+  .registerButton,
+  .logoutButton {
+    padding: 4px 8px;
+    font-size: 13px;
+  }
+
+  .userEmail {
+    display: none;
+  }
+}

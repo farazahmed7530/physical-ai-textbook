@@ -1,0 +1,67 @@
+# Content Indexing Workflow
+# Re-indexes textbook content into Qdrant when docs change
+# Requirements: 4.3
+
+name: Index Content
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'textbook/docs/**'
+  workflow_dispatch:
+    inputs:
+      force_reindex:
+        description: 'Force full re-index'
+        required: false
+        default: 'false'
+        type: boolean
+
+concurrency:
+  group: content-indexing
+  cancel-in-progress: false  # Don't cancel indexing jobs
+
+jobs:
+  index:
+    name: Index Textbook Content
+    runs-on: ubuntu-latest
+    # Only run if Qdrant is configured
+    if: vars.QDRANT_URL != '' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run content indexer
+        working-directory: backend
+        run: |
+          python scripts/index_content.py \
+            --docs-path ../textbook/docs \
+            --base-url "${{ vars.SITE_BASE_URL || 'https://github.io' }}"
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          QDRANT_URL: ${{ secrets.QDRANT_URL }}
+          QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+
+      - name: Report indexing status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ Content indexing completed successfully"
+          else
+            echo "❌ Content indexing failed"
+            exit 1
+          fi

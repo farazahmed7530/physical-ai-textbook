@@ -1,0 +1,272 @@
+/**
+ * PersonalizationControls styles
+ * Requirements: 7.1, 7.2, 7.3
+ */
+
+/* Personalize button */
+.personalizeButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--ifm-color-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s, transform 0.2s;
+}
+
+.personalizeButton:hover:not(:disabled) {
+  background: var(--ifm-color-primary-dark);
+  transform: translateY(-1px);
+}
+
+.personalizeButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.personalizeButton svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Loading spinner */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Personalized content indicator */
+.personalizedIndicator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--ifm-color-success-lightest);
+  border: 1px solid var(--ifm-color-success-light);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+[data-theme='dark'] .personalizedIndicator {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: var(--ifm-color-success-dark);
+}
+
+.indicatorContent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.indicatorIcon {
+  width: 20px;
+  height: 20px;
+  color: var(--ifm-color-success-dark);
+}
+
+[data-theme='dark'] .indicatorIcon {
+  color: var(--ifm-color-success-light);
+}
+
+.indicatorText {
+  font-size: 14px;
+  color: var(--ifm-color-success-darker);
+}
+
+[data-theme='dark'] .indicatorText {
+  color: var(--ifm-color-success-light);
+}
+
+.experienceLevel {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.cacheIndicator {
+  font-size: 12px;
+  color: var(--ifm-color-emphasis-600);
+  margin-left: 8px;
+}
+
+.viewOriginalButton {
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--ifm-color-success-dark);
+  border: 1px solid var(--ifm-color-success-dark);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+[data-theme='dark'] .viewOriginalButton {
+  color: var(--ifm-color-success-light);
+  border-color: var(--ifm-color-success-light);
+}
+
+.viewOriginalButton:hover {
+  background: var(--ifm-color-success-dark);
+  color: white;
+}
+
+[data-theme='dark'] .viewOriginalButton:hover {
+  background: var(--ifm-color-success-light);
+  color: var(--ifm-color-success-darkest);
+}
+
+/* Error message */
+.errorMessage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+[data-theme='dark'] .errorMessage {
+  background: #450a0a;
+  color: #fca5a5;
+}
+
+.errorIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.dismissError {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.dismissError:hover {
+  opacity: 1;
+}
+
+/* Profile incomplete modal */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 16px;
+}
+
+.modalContent {
+  background: var(--ifm-background-color);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.modalIcon {
+  width: 48px;
+  height: 48px;
+  color: var(--ifm-color-warning);
+  margin-bottom: 16px;
+}
+
+.modalTitle {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: var(--ifm-font-color-base);
+}
+
+.modalText {
+  font-size: 14px;
+  color: var(--ifm-color-emphasis-600);
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.modalButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.modalButtonPrimary {
+  padding: 10px 20px;
+  background: var(--ifm-color-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.modalButtonPrimary:hover {
+  background: var(--ifm-color-primary-dark);
+}
+
+.modalButtonSecondary {
+  padding: 10px 20px;
+  background: transparent;
+  color: var(--ifm-color-emphasis-700);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.modalButtonSecondary:hover {
+  background: var(--ifm-color-emphasis-100);
+  border-color: var(--ifm-color-emphasis-400);
+}
+
+/* Controls container */
+.controlsContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* Personalized content wrapper */
+.personalizedContentWrapper {
+  position: relative;
+}
+
+.personalizedContent {
+  /* Content inherits page styles */
+}
