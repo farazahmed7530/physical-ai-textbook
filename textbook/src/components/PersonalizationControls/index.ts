@@ -3,6 +3,7 @@
  * Requirements: 7.1, 7.2, 7.3
  */
 
+export { ChapterPersonalizeButton } from "./ChapterPersonalizeButton";
 export { PersonalizationControls } from "./PersonalizationControls";
 export { PersonalizeButton } from "./PersonalizeButton";
 export { PersonalizedContentDisplay } from "./PersonalizedContentDisplay";
