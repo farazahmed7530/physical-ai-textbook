@@ -10,7 +10,7 @@ export interface JointState {
 }
 
 export interface RobotViewerProps {
-  urdfPath: string;
+  urdfPath?: string;
   width?: string | number;
   height?: string | number;
   showControls?: boolean;
@@ -24,7 +24,7 @@ export interface JointControlsProps {
 }
 
 export interface RobotModelProps {
-  urdfPath: string;
+  urdfPath?: string;
   jointAngles: Record<string, number>;
   onJointsLoaded?: (joints: JointState[]) => void;
 }

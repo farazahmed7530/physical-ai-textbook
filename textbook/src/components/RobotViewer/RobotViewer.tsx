@@ -138,7 +138,6 @@ export const RobotViewer: React.FC<RobotViewerProps> = ({
 
           <Suspense fallback={<LoadingFallback />}>
             <RobotModel
-              urdfPath={urdfPath}
               jointAngles={jointAngles}
               onJointsLoaded={handleJointsLoaded}
             />
