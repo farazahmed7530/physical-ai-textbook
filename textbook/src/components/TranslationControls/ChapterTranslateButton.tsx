@@ -75,20 +75,23 @@ export function ChapterTranslateButton({
           <button class="${styles.viewOriginalBtn}" id="view-original-translation-btn">View Original</button>
         </div>` + data.translated_content;
 
-      // Add click handler for view original button
-      const viewOriginalBtn = document.getElementById(
-        "view-original-translation-btn"
-      );
-      if (viewOriginalBtn && originalContentRef.current) {
-        viewOriginalBtn.onclick = () => {
-          if (articleEl && originalContentRef.current) {
-            articleEl.innerHTML = originalContentRef.current;
-            setIsTranslated(false);
-          }
-        };
-      }
-
       setIsTranslated(true);
+
+      // Add click handler for view original button after a short delay
+      setTimeout(() => {
+        const viewOriginalBtn = document.getElementById(
+          "view-original-translation-btn"
+        );
+        if (viewOriginalBtn) {
+          viewOriginalBtn.onclick = () => {
+            if (articleEl && originalContentRef.current) {
+              articleEl.innerHTML = originalContentRef.current;
+              setIsTranslated(false);
+              originalContentRef.current = null; // Reset so it can be captured again
+            }
+          };
+        }
+      }, 100);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Translation failed";
       setError(message);

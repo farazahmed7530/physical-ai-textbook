@@ -35,9 +35,13 @@ export const RobotModel: React.FC<RobotModelProps> = ({
   const upperArmRef = useRef<THREE.Group>(null);
   const forearmRef = useRef<THREE.Group>(null);
   const wristRef = useRef<THREE.Group>(null);
+  const initializedRef = useRef(false);
 
-  // Initialize joints on mount
+  // Initialize joints on mount (only once)
   useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
     const joints: JointState[] = JOINT_CONFIG.map((config) => ({
       name: config.name,
       angle: 0,
@@ -45,7 +49,7 @@ export const RobotModel: React.FC<RobotModelProps> = ({
       max: config.max,
     }));
     onJointsLoaded?.(joints);
-  }, [onJointsLoaded]);
+  }, []);
 
   // Update joint rotations
   useFrame(() => {

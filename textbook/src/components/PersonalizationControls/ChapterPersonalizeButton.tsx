@@ -133,18 +133,21 @@ export function ChapterPersonalizeButton({
           <button class="${styles.viewOriginalBtn}" id="view-original-btn">View Original</button>
         </div>` + `<div class="personalized-content">${htmlContent}</div>`;
 
-      // Add click handler for view original button
-      const viewOriginalBtn = document.getElementById("view-original-btn");
-      if (viewOriginalBtn && originalContentRef.current) {
-        viewOriginalBtn.onclick = () => {
-          if (articleEl && originalContentRef.current) {
-            articleEl.innerHTML = originalContentRef.current;
-            setIsPersonalized(false);
-          }
-        };
-      }
-
       setIsPersonalized(true);
+
+      // Add click handler for view original button after a short delay
+      setTimeout(() => {
+        const viewOriginalBtn = document.getElementById("view-original-btn");
+        if (viewOriginalBtn) {
+          viewOriginalBtn.onclick = () => {
+            if (articleEl && originalContentRef.current) {
+              articleEl.innerHTML = originalContentRef.current;
+              setIsPersonalized(false);
+              originalContentRef.current = null; // Reset so it can be captured again
+            }
+          };
+        }
+      }, 100);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Personalization failed";

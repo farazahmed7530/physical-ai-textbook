@@ -75,23 +75,18 @@ export const RobotViewer: React.FC<RobotViewerProps> = ({
     useState<Record<string, number>>(initialJointAngles);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Handle joints loaded from URDF
-  const handleJointsLoaded = useCallback(
-    (loadedJoints: JointState[]) => {
-      setJoints(loadedJoints);
+  // Handle joints loaded from model (stable reference)
+  const handleJointsLoaded = useCallback((loadedJoints: JointState[]) => {
+    setJoints(loadedJoints);
 
-      // Initialize joint angles if not provided
-      const initialAngles: Record<string, number> = { ...initialJointAngles };
-      loadedJoints.forEach((joint) => {
-        if (!(joint.name in initialAngles)) {
-          initialAngles[joint.name] = joint.angle;
-        }
-      });
-      setJointAngles(initialAngles);
-      setIsLoading(false);
-    },
-    [initialJointAngles]
-  );
+    // Initialize joint angles
+    const initialAngles: Record<string, number> = {};
+    loadedJoints.forEach((joint) => {
+      initialAngles[joint.name] = joint.angle;
+    });
+    setJointAngles(initialAngles);
+    setIsLoading(false);
+  }, []);
 
   // Handle joint angle change from controls
   const handleJointChange = useCallback(
