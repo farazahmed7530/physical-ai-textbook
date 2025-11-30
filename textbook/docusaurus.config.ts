@@ -88,6 +88,11 @@ const config: Config = {
           label: "Textbook",
         },
         {
+          to: "/playground",
+          label: "🤖 Robot Playground",
+          position: "left",
+        },
+        {
           href: `https://github.com/${organizationName}/${projectName}`,
           label: "GitHub",
           position: "right",
