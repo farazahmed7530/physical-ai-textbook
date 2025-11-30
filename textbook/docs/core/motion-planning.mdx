@@ -3,6 +3,14 @@ sidebar_position: 1
 title: "Chapter 4: Motion Planning and Control"
 ---
 
+import { ChapterPersonalizeButton } from '@site/src/components/PersonalizationControls';
+import { ChapterTranslateButton } from '@site/src/components/TranslationControls';
+
+<div style={{display: 'flex', gap: '10px', marginBottom: '20px'}}>
+  <ChapterPersonalizeButton chapterId="core-motion-planning" />
+  <ChapterTranslateButton chapterId="core-motion-planning" />
+</div>
+
 # Motion Planning and Control
 
 Motion planning determines how a robot moves from one configuration to another while avoiding obstacles and respecting physical constraints.

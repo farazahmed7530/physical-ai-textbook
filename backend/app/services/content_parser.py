@@ -380,9 +380,16 @@ class ContentChunker:
             yield " ".join(current_chunk)
 
     def _generate_chunk_id(self, chapter_id: str, section_title: str, position: int) -> str:
-        """Generate a unique, deterministic chunk ID."""
+        """Generate a unique, deterministic chunk ID as a valid UUID.
+
+        Qdrant requires point IDs to be either unsigned integers or valid UUIDs.
+        We generate a deterministic UUID v5 based on the content identifiers.
+        """
+        import uuid
+        # Use UUID v5 with a namespace to generate deterministic UUIDs
+        namespace = uuid.UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")  # URL namespace
         content = f"{chapter_id}:{section_title}:{position}"
-        return hashlib.sha256(content.encode()).hexdigest()[:16]
+        return str(uuid.uuid5(namespace, content))
 
 
 def parse_textbook_directory(

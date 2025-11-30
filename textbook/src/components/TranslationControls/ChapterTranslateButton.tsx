@@ -7,7 +7,7 @@
 
 import { useAuth } from "@site/src/components/AuthProvider";
 import { API_BASE_URL } from "@site/src/config";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import styles from "./styles.module.css";
 
 interface ChapterTranslateButtonProps {
@@ -20,6 +20,8 @@ export function ChapterTranslateButton({
   const { isAuthenticated, token } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isTranslated, setIsTranslated] = useState(false);
+  const originalContentRef = useRef<string | null>(null);
 
   const handleTranslate = useCallback(async () => {
     if (!isAuthenticated || !token || isLoading) return;
@@ -29,10 +31,20 @@ export function ChapterTranslateButton({
 
     try {
       // Get the main content from the page
-      const mainContent =
-        document.querySelector("article")?.textContent ||
-        document.querySelector(".markdown")?.textContent ||
-        "Chapter content";
+      const articleEl =
+        document.querySelector("article") ||
+        document.querySelector(".markdown");
+
+      if (!articleEl) {
+        throw new Error("Could not find article content");
+      }
+
+      // Store original content for restoration
+      if (!originalContentRef.current) {
+        originalContentRef.current = articleEl.innerHTML;
+      }
+
+      const mainContent = articleEl.textContent || "Chapter content";
 
       const response = await fetch(`${API_BASE_URL}/api/translate`, {
         method: "POST",
@@ -42,7 +54,7 @@ export function ChapterTranslateButton({
         },
         body: JSON.stringify({
           chapter_id: chapterId,
-          content: mainContent.substring(0, 5000), // Limit content size
+          content: mainContent.substring(0, 8000), // Limit content size
           language: "ur", // Urdu
         }),
       });
@@ -56,15 +68,27 @@ export function ChapterTranslateButton({
 
       const data = await response.json();
 
-      // Replace page content with translated version (RTL for Urdu)
-      const articleEl =
-        document.querySelector("article") ||
-        document.querySelector(".markdown");
-      if (articleEl && data.translated_content) {
-        articleEl.innerHTML =
-          `<div style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 10px 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px;">🌐 Translated to Urdu</div>` +
-          `<div dir="rtl" style="text-align: right; font-family: 'Noto Nastaliq Urdu', serif; white-space: pre-wrap;">${data.translated_content}</div>`;
+      // The translated_content already includes RTL wrapper from backend
+      articleEl.innerHTML =
+        `<div class="${styles.translatedBanner}">
+          <span>🌐 Translated to Urdu</span>
+          <button class="${styles.viewOriginalBtn}" id="view-original-translation-btn">View Original</button>
+        </div>` + data.translated_content;
+
+      // Add click handler for view original button
+      const viewOriginalBtn = document.getElementById(
+        "view-original-translation-btn"
+      );
+      if (viewOriginalBtn && originalContentRef.current) {
+        viewOriginalBtn.onclick = () => {
+          if (articleEl && originalContentRef.current) {
+            articleEl.innerHTML = originalContentRef.current;
+            setIsTranslated(false);
+          }
+        };
       }
+
+      setIsTranslated(true);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Translation failed";
       setError(message);
@@ -90,9 +114,13 @@ export function ChapterTranslateButton({
       <button
         className={styles.translateButton}
         onClick={handleTranslate}
-        disabled={isLoading}
+        disabled={isLoading || isTranslated}
       >
-        {isLoading ? "⏳ Translating..." : "🌐 Translate to Urdu"}
+        {isLoading
+          ? "⏳ Translating..."
+          : isTranslated
+          ? "✅ Translated"
+          : "🌐 Translate to Urdu"}
       </button>
       {error && <p style={{ color: "red", fontSize: "12px" }}>{error}</p>}
     </div>

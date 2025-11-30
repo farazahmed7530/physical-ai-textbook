@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     qdrant_url: str = ""
     qdrant_api_key: str = ""
     qdrant_collection_name: str = "textbook_content"
-    qdrant_vector_size: int = 768  # Gemini text-embedding-004 dimensions
+    qdrant_vector_size: int = 768  # Gemini text-embedding-004 dimensions (OpenAI uses 1536)
 
     # LLM Provider Configuration
     # Supported providers: "openai", "gemini"

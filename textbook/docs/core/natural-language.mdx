@@ -3,6 +3,14 @@ sidebar_position: 3
 title: "Chapter 6: Natural Language Interaction"
 ---
 
+import { ChapterPersonalizeButton } from '@site/src/components/PersonalizationControls';
+import { ChapterTranslateButton } from '@site/src/components/TranslationControls';
+
+<div style={{display: 'flex', gap: '10px', marginBottom: '20px'}}>
+  <ChapterPersonalizeButton chapterId="core-natural-language" />
+  <ChapterTranslateButton chapterId="core-natural-language" />
+</div>
+
 # Natural Language Interaction
 
 Natural language interaction enables humans to communicate with robots using speech and text, making robots more accessible and intuitive to use.
