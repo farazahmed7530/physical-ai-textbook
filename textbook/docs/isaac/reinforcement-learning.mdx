@@ -1,0 +1,689 @@
+---
+sidebar_position: 3
+title: "Chapter 11: Reinforcement Learning for Robot Control"
+---
+
+import { ChapterPersonalizeButton } from '@site/src/components/PersonalizationControls';
+import { ChapterTranslateButton } from '@site/src/components/TranslationControls';
+
+<div style={{display: 'flex', gap: '10px', marginBottom: '20px'}}>
+  <ChapterPersonalizeButton chapterId="isaac-reinforcement-learning" />
+  <ChapterTranslateButton chapterId="isaac-reinforcement-learning" />
+</div>
+
+# Reinforcement Learning for Robot Control
+
+Reinforcement Learning (RL) enables robots to learn complex behaviors through trial and error. In this chapter, you'll learn how to use NVIDIA Isaac Lab (formerly Isaac Gym) to train humanoid robots using GPU-accelerated parallel simulation.
+
+## Learning Objectives
+
+By the end of this chapter, you will be able to:
+- Understand reinforcement learning fundamentals for robotics
+- Set up Isaac Lab for GPU-accelerated RL training
+- Design reward functions for humanoid locomotion
+- Train policies using PPO and other algorithms
+- Evaluate and deploy trained policies
+
+## Why RL for Humanoid Robots?
+
+Traditional control methods struggle with the complexity of humanoid robots. RL offers a data-driven approach to learning natural, robust behaviors.
+
+### Traditional Control vs RL
+
+| Aspect | Traditional Control | Reinforcement Learning |
+|--------|--------------------|-----------------------|
+| **Design** | Hand-crafted controllers | Learned from experience |
+| **Adaptability** | Limited to modeled scenarios | Adapts to new situations |
+| **Complexity** | Difficult for high-DoF | Scales with compute |
+| **Robustness** | Requires explicit handling | Emerges from training |
+| **Development** | Requires domain expertise | Requires reward design |
+
+
+## RL Fundamentals for Robotics
+
+### The RL Framework
+
+In reinforcement learning, an agent learns by interacting with an environment:
+
+1. **State (s)**: Robot's current configuration (joint positions, velocities, sensor data)
+2. **Action (a)**: Control commands (joint torques or position targets)
+3. **Reward (r)**: Scalar feedback signal (higher is better)
+4. **Policy (π)**: Mapping from states to actions
+
+### Key Algorithms
+
+| Algorithm | Type | Best For |
+|-----------|------|----------|
+| **PPO** | On-policy | Stable training, locomotion |
+| **SAC** | Off-policy | Sample efficiency, manipulation |
+| **TD3** | Off-policy | Continuous control |
+| **DDPG** | Off-policy | Simple continuous tasks |
+
+:::tip PPO for Humanoids
+Proximal Policy Optimization (PPO) is the most popular choice for humanoid locomotion due to its stability and ability to handle high-dimensional action spaces.
+:::
+
+## Isaac Lab Overview
+
+Isaac Lab is NVIDIA's framework for robot learning, built on Isaac Sim.
+
+### Key Features
+
+- **Massive Parallelism**: Train thousands of robots simultaneously
+- **GPU Physics**: PhysX 5 with GPU acceleration
+- **Modular Design**: Easy to customize environments
+- **RL Integration**: Works with RSL-RL, RL Games, Stable Baselines3
+
+### Installation
+
+```bash
+# Clone Isaac Lab
+git clone https://github.com/isaac-sim/IsaacLab.git
+cd IsaacLab
+
+# Create conda environment
+conda create -n isaaclab python=3.10
+conda activate isaaclab
+
+# Install Isaac Sim (follow NVIDIA instructions)
+# Then install Isaac Lab
+pip install -e .
+
+# Install RL libraries
+pip install rsl-rl rl-games stable-baselines3
+```
+
+
+## Creating a Humanoid Environment
+
+### Environment Structure
+
+```python
+# envs/humanoid_locomotion.py
+import torch
+from omni.isaac.lab.envs import ManagerBasedRLEnv
+from omni.isaac.lab.managers import SceneEntityCfg
+from omni.isaac.lab.assets import ArticulationCfg, AssetBaseCfg
+
+class HumanoidLocomotionEnv(ManagerBasedRLEnv):
+    """Environment for humanoid walking."""
+
+    def __init__(self, cfg, render_mode=None):
+        super().__init__(cfg, render_mode)
+
+        # Get robot articulation
+        self.robot = self.scene["robot"]
+
+        # Target velocity
+        self.target_velocity = torch.zeros(self.num_envs, 3, device=self.device)
+        self.target_velocity[:, 0] = 1.0  # Forward velocity
+
+    def _get_observations(self):
+        """Compute observations for the policy."""
+        # Joint positions and velocities
+        joint_pos = self.robot.data.joint_pos
+        joint_vel = self.robot.data.joint_vel
+
+        # Base orientation and angular velocity
+        base_quat = self.robot.data.root_quat_w
+        base_ang_vel = self.robot.data.root_ang_vel_b
+
+        # Projected gravity
+        gravity_proj = self._compute_gravity_projection(base_quat)
+
+        # Command
+        commands = self.target_velocity
+
+        obs = torch.cat([
+            joint_pos,
+            joint_vel,
+            base_ang_vel,
+            gravity_proj,
+            commands,
+        ], dim=-1)
+
+        return {"policy": obs}
+
+    def _compute_gravity_projection(self, quat):
+        """Project gravity vector into body frame."""
+        gravity = torch.tensor([0, 0, -1], device=self.device)
+        # Rotate gravity by inverse of base orientation
+        return self._quat_rotate_inverse(quat, gravity.expand(self.num_envs, -1))
+```
+
+### Environment Configuration
+
+```python
+# configs/humanoid_locomotion_cfg.py
+from omni.isaac.lab.envs import ManagerBasedRLEnvCfg
+from omni.isaac.lab.scene import InteractiveSceneCfg
+from omni.isaac.lab.assets import ArticulationCfg
+from omni.isaac.lab.managers import ObservationGroupCfg, RewardTermCfg
+
+@configclass
+class HumanoidLocomotionEnvCfg(ManagerBasedRLEnvCfg):
+    """Configuration for humanoid locomotion environment."""
+
+    # Scene
+    scene: InteractiveSceneCfg = InteractiveSceneCfg(
+        num_envs=4096,
+        env_spacing=2.5,
+    )
+
+    # Robot
+    robot: ArticulationCfg = ArticulationCfg(
+        prim_path="/World/envs/env_.*/Robot",
+        spawn=sim_utils.UsdFileCfg(
+            usd_path="path/to/humanoid.usd",
+        ),
+        init_state=ArticulationCfg.InitialStateCfg(
+            pos=(0.0, 0.0, 1.0),
+            joint_pos={".*": 0.0},
+        ),
+        actuators={
+            "legs": ImplicitActuatorCfg(
+                joint_names_expr=[".*_hip_.*", ".*_knee_.*", ".*_ankle_.*"],
+                stiffness=100.0,
+                damping=10.0,
+            ),
+        },
+    )
+
+    # Simulation
+    sim: SimulationCfg = SimulationCfg(
+        dt=0.005,
+        render_interval=4,
+    )
+
+    # Episode
+    episode_length_s = 20.0
+```
+
+
+## Designing Reward Functions
+
+Reward design is crucial for successful RL training. For humanoid locomotion, we combine multiple reward terms.
+
+### Reward Components
+
+```python
+# rewards/locomotion_rewards.py
+import torch
+from omni.isaac.lab.managers import RewardTermCfg
+
+def velocity_tracking_reward(env, target_vel: torch.Tensor) -> torch.Tensor:
+    """Reward for tracking target velocity."""
+    current_vel = env.robot.data.root_lin_vel_b[:, :2]  # x, y velocity
+    target = target_vel[:, :2]
+    error = torch.sum(torch.square(current_vel - target), dim=1)
+    return torch.exp(-error / 0.25)
+
+def orientation_reward(env) -> torch.Tensor:
+    """Reward for maintaining upright orientation."""
+    # Projected gravity should point down in body frame
+    gravity_proj = env._compute_gravity_projection(env.robot.data.root_quat_w)
+    return torch.sum(torch.square(gravity_proj[:, :2]), dim=1) * -1.0
+
+def joint_torque_penalty(env) -> torch.Tensor:
+    """Penalize high joint torques for energy efficiency."""
+    torques = env.robot.data.applied_torque
+    return torch.sum(torch.square(torques), dim=1) * -0.0001
+
+def action_rate_penalty(env) -> torch.Tensor:
+    """Penalize rapid changes in actions for smooth motion."""
+    action_diff = env.actions - env.prev_actions
+    return torch.sum(torch.square(action_diff), dim=1) * -0.01
+
+def feet_air_time_reward(env) -> torch.Tensor:
+    """Reward for appropriate foot swing timing."""
+    contact = env.contact_sensor.data.net_forces_w_history[:, :, 2] > 1.0
+    first_contact = contact[:, 0] & ~contact[:, 1]
+    air_time = env.feet_air_time
+    reward = torch.sum((air_time - 0.5) * first_contact, dim=1)
+    return reward
+
+def termination_penalty(env) -> torch.Tensor:
+    """Large penalty for falling."""
+    return torch.where(env.reset_buf, -100.0, 0.0)
+```
+
+### Reward Configuration
+
+```python
+# configs/rewards_cfg.py
+from omni.isaac.lab.managers import RewardTermCfg
+
+@configclass
+class RewardsCfg:
+    """Reward terms for humanoid locomotion."""
+
+    # Tracking rewards
+    velocity_tracking = RewardTermCfg(
+        func=velocity_tracking_reward,
+        weight=1.5,
+    )
+
+    # Regularization
+    orientation = RewardTermCfg(
+        func=orientation_reward,
+        weight=0.5,
+    )
+
+    joint_torque = RewardTermCfg(
+        func=joint_torque_penalty,
+        weight=1.0,
+    )
+
+    action_rate = RewardTermCfg(
+        func=action_rate_penalty,
+        weight=1.0,
+    )
+
+    # Gait rewards
+    feet_air_time = RewardTermCfg(
+        func=feet_air_time_reward,
+        weight=0.5,
+    )
+
+    # Termination
+    termination = RewardTermCfg(
+        func=termination_penalty,
+        weight=1.0,
+    )
+```
+
+:::caution Reward Shaping
+Reward design is an art. Start simple (just velocity tracking) and add terms gradually. Too many penalties early can prevent learning.
+:::
+
+
+## Training with PPO
+
+### PPO Configuration
+
+```python
+# configs/ppo_cfg.py
+from rsl_rl.algorithms import PPOCfg
+from rsl_rl.modules import ActorCriticCfg
+
+@configclass
+class PPORunnerCfg:
+    """Configuration for PPO training."""
+
+    # Algorithm
+    algorithm: PPOCfg = PPOCfg(
+        value_loss_coef=1.0,
+        use_clipped_value_loss=True,
+        clip_param=0.2,
+        entropy_coef=0.01,
+        num_learning_epochs=5,
+        num_mini_batches=4,
+        learning_rate=1e-3,
+        schedule="adaptive",
+        gamma=0.99,
+        lam=0.95,
+        desired_kl=0.01,
+        max_grad_norm=1.0,
+    )
+
+    # Policy network
+    policy: ActorCriticCfg = ActorCriticCfg(
+        class_name="ActorCritic",
+        init_noise_std=1.0,
+        actor_hidden_dims=[512, 256, 128],
+        critic_hidden_dims=[512, 256, 128],
+        activation="elu",
+    )
+
+    # Training
+    num_steps_per_env = 24
+    max_iterations = 1500
+    save_interval = 50
+    experiment_name = "humanoid_locomotion"
+    run_name = "ppo_v1"
+    logger = "tensorboard"
+```
+
+### Training Script
+
+```python
+# scripts/train_humanoid.py
+import argparse
+from omni.isaac.lab.app import AppLauncher
+
+# Parse arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("--num_envs", type=int, default=4096)
+parser.add_argument("--headless", action="store_true")
+args = parser.parse_args()
+
+# Launch Isaac Sim
+app_launcher = AppLauncher(args)
+simulation_app = app_launcher.app
+
+# Import after launching
+from omni.isaac.lab_tasks.utils import get_checkpoint_path
+from rsl_rl.runners import OnPolicyRunner
+
+from envs.humanoid_locomotion import HumanoidLocomotionEnv
+from configs.humanoid_locomotion_cfg import HumanoidLocomotionEnvCfg
+from configs.ppo_cfg import PPORunnerCfg
+
+def main():
+    # Create environment
+    env_cfg = HumanoidLocomotionEnvCfg()
+    env_cfg.scene.num_envs = args.num_envs
+    env = HumanoidLocomotionEnv(cfg=env_cfg)
+
+    # Create runner
+    runner_cfg = PPORunnerCfg()
+    runner = OnPolicyRunner(env, runner_cfg, log_dir="logs", device="cuda")
+
+    # Train
+    runner.learn(num_learning_iterations=runner_cfg.max_iterations)
+
+    # Save final policy
+    runner.save("final_policy.pt")
+
+    env.close()
+    simulation_app.close()
+
+
+if __name__ == "__main__":
+    main()
+```
+
+### Running Training
+
+```bash
+# Train with 4096 parallel environments
+python scripts/train_humanoid.py --num_envs 4096 --headless
+
+# Monitor with TensorBoard
+tensorboard --logdir logs/
+```
+
+
+## Curriculum Learning
+
+For complex tasks, curriculum learning gradually increases difficulty.
+
+### Implementing Curriculum
+
+```python
+# curriculum/velocity_curriculum.py
+import torch
+from omni.isaac.lab.managers import CurriculumTermCfg
+
+class VelocityCurriculum:
+    """Curriculum that increases target velocity over training."""
+
+    def __init__(self, env, initial_vel=0.5, max_vel=2.0, threshold=0.8):
+        self.env = env
+        self.initial_vel = initial_vel
+        self.max_vel = max_vel
+        self.current_vel = initial_vel
+        self.threshold = threshold
+        self.success_buffer = []
+
+    def update(self, episode_rewards):
+        """Update curriculum based on performance."""
+        # Track success rate
+        success = (episode_rewards > self.threshold * self.current_vel).float().mean()
+        self.success_buffer.append(success.item())
+
+        # Keep last 100 episodes
+        if len(self.success_buffer) > 100:
+            self.success_buffer.pop(0)
+
+        # Increase difficulty if success rate > 80%
+        avg_success = sum(self.success_buffer) / len(self.success_buffer)
+        if avg_success > 0.8 and self.current_vel < self.max_vel:
+            self.current_vel = min(self.current_vel + 0.1, self.max_vel)
+            print(f"Curriculum: Increased velocity to {self.current_vel:.1f} m/s")
+
+        # Update environment target
+        self.env.target_velocity[:, 0] = self.current_vel
+
+    def get_current_level(self):
+        return self.current_vel
+
+
+class TerrainCurriculum:
+    """Curriculum that introduces terrain difficulty."""
+
+    def __init__(self, env):
+        self.env = env
+        self.terrain_levels = [
+            "flat",
+            "rough",
+            "slopes",
+            "stairs",
+        ]
+        self.current_level = 0
+
+    def update(self, success_rate):
+        """Progress to harder terrain."""
+        if success_rate > 0.9 and self.current_level < len(self.terrain_levels) - 1:
+            self.current_level += 1
+            self._update_terrain()
+
+    def _update_terrain(self):
+        """Update simulation terrain."""
+        terrain_type = self.terrain_levels[self.current_level]
+        print(f"Curriculum: Switching to {terrain_type} terrain")
+        # Update terrain in simulation
+```
+
+## Domain Randomization
+
+Domain randomization helps policies generalize to real robots.
+
+### Randomization Configuration
+
+```python
+# configs/randomization_cfg.py
+from omni.isaac.lab.managers import RandomizationTermCfg
+
+@configclass
+class RandomizationCfg:
+    """Domain randomization for sim-to-real transfer."""
+
+    # Physics randomization
+    friction = RandomizationTermCfg(
+        func=randomize_friction,
+        params={"range": (0.5, 1.5)},
+        mode="startup",
+    )
+
+    mass = RandomizationTermCfg(
+        func=randomize_mass,
+        params={"range": (0.9, 1.1)},
+        mode="startup",
+    )
+
+    # Actuator randomization
+    motor_strength = RandomizationTermCfg(
+        func=randomize_motor_strength,
+        params={"range": (0.8, 1.2)},
+        mode="startup",
+    )
+
+    # Observation noise
+    joint_pos_noise = RandomizationTermCfg(
+        func=add_joint_pos_noise,
+        params={"std": 0.01},
+        mode="reset",
+    )
+
+    joint_vel_noise = RandomizationTermCfg(
+        func=add_joint_vel_noise,
+        params={"std": 0.1},
+        mode="reset",
+    )
+
+    # External disturbances
+    push_robot = RandomizationTermCfg(
+        func=push_robot,
+        params={"force_range": (50, 200), "interval": (4.0, 8.0)},
+        mode="interval",
+    )
+
+
+def randomize_friction(env, range):
+    """Randomize ground friction."""
+    friction = torch.empty(env.num_envs, device=env.device)
+    friction.uniform_(range[0], range[1])
+    # Apply to ground material
+    return friction
+
+
+def push_robot(env, force_range, interval):
+    """Apply random push forces."""
+    force = torch.zeros(env.num_envs, 3, device=env.device)
+    force[:, :2].uniform_(-force_range[1], force_range[1])
+    env.robot.set_external_force_and_torque(force, torch.zeros_like(force))
+```
+
+
+## Evaluating Trained Policies
+
+### Evaluation Script
+
+```python
+# scripts/evaluate_policy.py
+import torch
+from omni.isaac.lab.app import AppLauncher
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--checkpoint", type=str, required=True)
+parser.add_argument("--num_envs", type=int, default=16)
+args = parser.parse_args()
+
+app_launcher = AppLauncher(args)
+simulation_app = app_launcher.app
+
+from envs.humanoid_locomotion import HumanoidLocomotionEnv
+from configs.humanoid_locomotion_cfg import HumanoidLocomotionEnvCfg
+
+def evaluate():
+    # Create environment
+    env_cfg = HumanoidLocomotionEnvCfg()
+    env_cfg.scene.num_envs = args.num_envs
+    env = HumanoidLocomotionEnv(cfg=env_cfg, render_mode="human")
+
+    # Load policy
+    policy = torch.jit.load(args.checkpoint)
+    policy.eval()
+
+    # Evaluation metrics
+    total_rewards = []
+    episode_lengths = []
+    velocities = []
+
+    obs = env.reset()
+    episode_reward = torch.zeros(args.num_envs, device=env.device)
+    episode_length = torch.zeros(args.num_envs, device=env.device)
+
+    for step in range(1000):
+        with torch.no_grad():
+            actions = policy(obs["policy"])
+
+        obs, rewards, dones, infos = env.step(actions)
+        episode_reward += rewards
+        episode_length += 1
+
+        # Track velocity
+        velocities.append(env.robot.data.root_lin_vel_b[:, 0].mean().item())
+
+        # Handle episode ends
+        for i, done in enumerate(dones):
+            if done:
+                total_rewards.append(episode_reward[i].item())
+                episode_lengths.append(episode_length[i].item())
+                episode_reward[i] = 0
+                episode_length[i] = 0
+
+    # Print results
+    print(f"Average Reward: {sum(total_rewards)/len(total_rewards):.2f}")
+    print(f"Average Episode Length: {sum(episode_lengths)/len(episode_lengths):.1f}")
+    print(f"Average Velocity: {sum(velocities)/len(velocities):.2f} m/s")
+
+    env.close()
+
+
+if __name__ == "__main__":
+    evaluate()
+```
+
+### Visualization
+
+```bash
+# Run with visualization
+python scripts/evaluate_policy.py --checkpoint logs/final_policy.pt --num_envs 4
+
+# Record video
+python scripts/evaluate_policy.py --checkpoint logs/final_policy.pt --record
+```
+
+## Practical Exercise: Train a Walking Policy
+
+Let's train a humanoid to walk forward.
+
+### Step 1: Define Simple Rewards
+
+```python
+# Start with minimal rewards
+@configclass
+class SimpleRewardsCfg:
+    velocity = RewardTermCfg(func=velocity_tracking_reward, weight=1.0)
+    alive = RewardTermCfg(func=lambda env: 1.0, weight=0.1)
+    termination = RewardTermCfg(func=termination_penalty, weight=1.0)
+```
+
+### Step 2: Train
+
+```bash
+# Start with fewer environments for debugging
+python scripts/train_humanoid.py --num_envs 256
+
+# Once working, scale up
+python scripts/train_humanoid.py --num_envs 4096 --headless
+```
+
+### Step 3: Iterate on Rewards
+
+```python
+# Add regularization after basic walking works
+@configclass
+class ImprovedRewardsCfg(SimpleRewardsCfg):
+    joint_torque = RewardTermCfg(func=joint_torque_penalty, weight=0.5)
+    action_rate = RewardTermCfg(func=action_rate_penalty, weight=0.5)
+    orientation = RewardTermCfg(func=orientation_reward, weight=0.3)
+```
+
+## Summary
+
+In this chapter, you learned about reinforcement learning for humanoid robots:
+
+- **RL Fundamentals**: States, actions, rewards, and policies
+- **Isaac Lab**: GPU-accelerated parallel training
+- **Reward Design**: Combining tracking and regularization terms
+- **Training**: PPO configuration and execution
+- **Curriculum**: Gradually increasing task difficulty
+- **Domain Randomization**: Preparing for sim-to-real transfer
+
+:::tip Key Takeaway
+Isaac Lab's massive parallelism (4096+ environments) enables training complex humanoid behaviors in hours instead of days. Start simple, iterate on rewards, and use curriculum learning for difficult tasks.
+:::
+
+## Further Reading
+
+- [Isaac Lab Documentation](https://isaac-sim.github.io/IsaacLab/)
+- [RSL-RL Library](https://github.com/leggedrobotics/rsl_rl)
+- [Learning to Walk Paper](https://arxiv.org/abs/2109.11978)
+- [Domain Randomization Survey](https://arxiv.org/abs/2110.14239)
+
+---
+
+**Next Chapter:** [Sim-to-Real Transfer Techniques](/isaac/sim-to-real)

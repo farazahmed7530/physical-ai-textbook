@@ -1,0 +1,740 @@
+---
+sidebar_position: 4
+title: "Chapter 12: Sim-to-Real Transfer Techniques"
+---
+
+import { ChapterPersonalizeButton } from '@site/src/components/PersonalizationControls';
+import { ChapterTranslateButton } from '@site/src/components/TranslationControls';
+
+<div style={{display: 'flex', gap: '10px', marginBottom: '20px'}}>
+  <ChapterPersonalizeButton chapterId="isaac-sim-to-real" />
+  <ChapterTranslateButton chapterId="isaac-sim-to-real" />
+</div>
+
+# Sim-to-Real Transfer Techniques
+
+The ultimate goal of simulation is deploying trained policies to real robots. This chapter covers techniques for bridging the "reality gap"—the differences between simulation and the real world that can cause policies to fail on physical hardware.
+
+## Learning Objectives
+
+By the end of this chapter, you will be able to:
+- Understand the reality gap and its causes
+- Apply domain randomization effectively
+- Implement system identification for accurate simulation
+- Deploy policies to real robots using ROS 2
+- Debug and iterate on sim-to-real transfer
+
+## The Reality Gap
+
+Policies trained in simulation often fail on real robots due to differences in:
+
+| Factor | Simulation | Reality |
+|--------|------------|---------|
+| **Physics** | Idealized models | Complex dynamics |
+| **Sensors** | Perfect data | Noise, latency, dropouts |
+| **Actuators** | Instant response | Delays, backlash, limits |
+| **Environment** | Controlled | Variable lighting, surfaces |
+| **Timing** | Deterministic | Variable compute time |
+
+
+## Domain Randomization Strategies
+
+Domain randomization trains policies to be robust to variations, so they generalize to real-world conditions.
+
+### Physics Randomization
+
+```python
+# randomization/physics_randomization.py
+import torch
+from dataclasses import dataclass
+
+@dataclass
+class PhysicsRandomizationConfig:
+    """Configuration for physics randomization."""
+    # Mass properties
+    mass_scale_range: tuple = (0.8, 1.2)
+    com_displacement_range: tuple = (-0.05, 0.05)  # meters
+    inertia_scale_range: tuple = (0.8, 1.2)
+
+    # Contact properties
+    friction_range: tuple = (0.5, 1.5)
+    restitution_range: tuple = (0.0, 0.1)
+
+    # Joint properties
+    joint_damping_range: tuple = (0.8, 1.2)
+    joint_friction_range: tuple = (0.0, 0.1)
+    joint_armature_range: tuple = (0.0, 0.1)
+
+
+def randomize_robot_physics(env, config: PhysicsRandomizationConfig):
+    """Apply physics randomization to robot."""
+    num_envs = env.num_envs
+    device = env.device
+
+    # Randomize link masses
+    mass_scale = torch.empty(num_envs, device=device).uniform_(
+        config.mass_scale_range[0], config.mass_scale_range[1]
+    )
+    env.robot.root_physx_view.set_masses(
+        env.robot.data.default_mass * mass_scale.unsqueeze(-1)
+    )
+
+    # Randomize center of mass
+    com_offset = torch.empty(num_envs, 3, device=device).uniform_(
+        config.com_displacement_range[0], config.com_displacement_range[1]
+    )
+    # Apply COM offset to base link
+
+    # Randomize friction
+    friction = torch.empty(num_envs, device=device).uniform_(
+        config.friction_range[0], config.friction_range[1]
+    )
+    env.scene.terrain.set_friction(friction)
+
+    return {
+        "mass_scale": mass_scale,
+        "com_offset": com_offset,
+        "friction": friction,
+    }
+```
+
+### Actuator Randomization
+
+```python
+# randomization/actuator_randomization.py
+@dataclass
+class ActuatorRandomizationConfig:
+    """Configuration for actuator randomization."""
+    # Motor properties
+    strength_range: tuple = (0.8, 1.2)
+    delay_range: tuple = (0.0, 0.02)  # seconds
+
+    # PD gains
+    kp_range: tuple = (0.8, 1.2)
+    kd_range: tuple = (0.8, 1.2)
+
+    # Limits
+    torque_limit_range: tuple = (0.9, 1.0)
+    velocity_limit_range: tuple = (0.9, 1.0)
+
+
+class ActuatorModel:
+    """Realistic actuator model with delays and limits."""
+
+    def __init__(self, config: ActuatorRandomizationConfig, num_envs: int, num_joints: int):
+        self.config = config
+        self.num_envs = num_envs
+        self.num_joints = num_joints
+
+        # Randomize parameters
+        self.strength = torch.empty(num_envs, num_joints).uniform_(
+            config.strength_range[0], config.strength_range[1]
+        )
+        self.delay_steps = torch.randint(
+            0, int(config.delay_range[1] / 0.005) + 1,
+            (num_envs, num_joints)
+        )
+
+        # Action buffer for delays
+        self.action_buffer = []
+
+    def apply(self, actions: torch.Tensor) -> torch.Tensor:
+        """Apply actuator model to actions."""
+        # Add to buffer
+        self.action_buffer.append(actions.clone())
+        if len(self.action_buffer) > 10:
+            self.action_buffer.pop(0)
+
+        # Get delayed actions
+        delayed_actions = torch.zeros_like(actions)
+        for i in range(self.num_envs):
+            for j in range(self.num_joints):
+                delay = self.delay_steps[i, j].item()
+                if delay < len(self.action_buffer):
+                    delayed_actions[i, j] = self.action_buffer[-(delay+1)][i, j]
+                else:
+                    delayed_actions[i, j] = actions[i, j]
+
+        # Apply strength scaling
+        return delayed_actions * self.strength
+```
+
+
+### Sensor Noise Injection
+
+```python
+# randomization/sensor_noise.py
+import torch
+
+@dataclass
+class SensorNoiseConfig:
+    """Configuration for sensor noise."""
+    # Joint sensors
+    joint_pos_noise_std: float = 0.01  # radians
+    joint_vel_noise_std: float = 0.1   # rad/s
+
+    # IMU
+    gyro_noise_std: float = 0.02       # rad/s
+    accel_noise_std: float = 0.1       # m/s²
+    gyro_bias_range: tuple = (-0.01, 0.01)
+    accel_bias_range: tuple = (-0.05, 0.05)
+
+    # Latency
+    sensor_latency_range: tuple = (0.0, 0.01)  # seconds
+
+
+class NoisySensorModel:
+    """Add realistic noise to sensor readings."""
+
+    def __init__(self, config: SensorNoiseConfig, num_envs: int, device: str):
+        self.config = config
+        self.device = device
+
+        # Initialize biases (constant per episode)
+        self.gyro_bias = torch.empty(num_envs, 3, device=device).uniform_(
+            config.gyro_bias_range[0], config.gyro_bias_range[1]
+        )
+        self.accel_bias = torch.empty(num_envs, 3, device=device).uniform_(
+            config.accel_bias_range[0], config.accel_bias_range[1]
+        )
+
+    def add_joint_noise(self, joint_pos: torch.Tensor, joint_vel: torch.Tensor):
+        """Add noise to joint measurements."""
+        noisy_pos = joint_pos + torch.randn_like(joint_pos) * self.config.joint_pos_noise_std
+        noisy_vel = joint_vel + torch.randn_like(joint_vel) * self.config.joint_vel_noise_std
+        return noisy_pos, noisy_vel
+
+    def add_imu_noise(self, gyro: torch.Tensor, accel: torch.Tensor):
+        """Add noise and bias to IMU readings."""
+        noisy_gyro = gyro + self.gyro_bias + torch.randn_like(gyro) * self.config.gyro_noise_std
+        noisy_accel = accel + self.accel_bias + torch.randn_like(accel) * self.config.accel_noise_std
+        return noisy_gyro, noisy_accel
+
+    def reset_biases(self, env_ids: torch.Tensor):
+        """Reset biases for specified environments."""
+        self.gyro_bias[env_ids] = torch.empty(len(env_ids), 3, device=self.device).uniform_(
+            self.config.gyro_bias_range[0], self.config.gyro_bias_range[1]
+        )
+        self.accel_bias[env_ids] = torch.empty(len(env_ids), 3, device=self.device).uniform_(
+            self.config.accel_bias_range[0], self.config.accel_bias_range[1]
+        )
+```
+
+## System Identification
+
+System identification improves simulation accuracy by measuring real robot parameters.
+
+### Motor Identification
+
+```python
+# system_id/motor_identification.py
+import numpy as np
+from scipy.optimize import minimize
+
+class MotorIdentifier:
+    """Identify motor parameters from real robot data."""
+
+    def __init__(self):
+        self.data = []
+
+    def collect_data(self, position_cmd, position_actual, velocity, torque, dt):
+        """Collect data point for identification."""
+        self.data.append({
+            'cmd': position_cmd,
+            'pos': position_actual,
+            'vel': velocity,
+            'torque': torque,
+            'dt': dt,
+        })
+
+    def identify_pd_gains(self):
+        """Identify PD gains from collected data."""
+        def objective(params):
+            kp, kd = params
+            error = 0
+            for d in self.data:
+                predicted_torque = kp * (d['cmd'] - d['pos']) - kd * d['vel']
+                error += (predicted_torque - d['torque']) ** 2
+            return error
+
+        result = minimize(objective, x0=[100, 10], bounds=[(0, 500), (0, 50)])
+        return {'kp': result.x[0], 'kd': result.x[1]}
+
+    def identify_delay(self):
+        """Identify actuator delay from step response."""
+        # Find time between command change and response
+        delays = []
+        for i in range(1, len(self.data)):
+            if abs(self.data[i]['cmd'] - self.data[i-1]['cmd']) > 0.1:
+                # Command changed, find response
+                for j in range(i, min(i+50, len(self.data))):
+                    if abs(self.data[j]['pos'] - self.data[i-1]['pos']) > 0.01:
+                        delays.append((j - i) * self.data[i]['dt'])
+                        break
+        return np.mean(delays) if delays else 0.0
+```
+
+### Friction Identification
+
+```python
+# system_id/friction_identification.py
+class FrictionIdentifier:
+    """Identify joint friction parameters."""
+
+    def __init__(self):
+        self.velocity_torque_pairs = []
+
+    def collect_data(self, velocity, torque):
+        """Collect velocity-torque pairs."""
+        self.velocity_torque_pairs.append((velocity, torque))
+
+    def identify_coulomb_viscous(self):
+        """Identify Coulomb and viscous friction."""
+        velocities = np.array([v for v, t in self.velocity_torque_pairs])
+        torques = np.array([t for v, t in self.velocity_torque_pairs])
+
+        # Friction model: tau_f = mu_c * sign(v) + mu_v * v
+        def objective(params):
+            mu_c, mu_v = params
+            predicted = mu_c * np.sign(velocities) + mu_v * velocities
+            return np.sum((predicted - torques) ** 2)
+
+        result = minimize(objective, x0=[0.1, 0.01], bounds=[(0, 1), (0, 0.1)])
+        return {
+            'coulomb_friction': result.x[0],
+            'viscous_friction': result.x[1]
+        }
+```
+
+
+## Deploying to Real Robots
+
+### ROS 2 Policy Deployment
+
+```python
+#!/usr/bin/env python3
+# deployment/policy_node.py
+"""ROS 2 node for deploying trained policy to real robot."""
+
+import rclpy
+from rclpy.node import Node
+import torch
+import numpy as np
+from sensor_msgs.msg import JointState, Imu
+from std_msgs.msg import Float64MultiArray
+from geometry_msgs.msg import Vector3
+
+class PolicyDeploymentNode(Node):
+    """Deploy trained RL policy on real robot."""
+
+    def __init__(self):
+        super().__init__('policy_deployment')
+
+        # Load policy
+        policy_path = self.declare_parameter('policy_path', '').value
+        self.policy = torch.jit.load(policy_path)
+        self.policy.eval()
+
+        # Configuration
+        self.control_freq = self.declare_parameter('control_freq', 50.0).value
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+        # State buffers
+        self.joint_pos = None
+        self.joint_vel = None
+        self.imu_data = None
+        self.command_vel = np.array([1.0, 0.0, 0.0])  # Forward walking
+
+        # Subscribers
+        self.joint_sub = self.create_subscription(
+            JointState, '/joint_states', self.joint_callback, 10
+        )
+        self.imu_sub = self.create_subscription(
+            Imu, '/imu/data', self.imu_callback, 10
+        )
+        self.cmd_sub = self.create_subscription(
+            Vector3, '/cmd_vel', self.cmd_callback, 10
+        )
+
+        # Publisher
+        self.action_pub = self.create_publisher(
+            Float64MultiArray, '/joint_commands', 10
+        )
+
+        # Control timer
+        self.timer = self.create_timer(1.0 / self.control_freq, self.control_loop)
+
+        self.get_logger().info('Policy deployment node initialized')
+
+    def joint_callback(self, msg: JointState):
+        """Update joint state."""
+        self.joint_pos = np.array(msg.position)
+        self.joint_vel = np.array(msg.velocity)
+
+    def imu_callback(self, msg: Imu):
+        """Update IMU data."""
+        self.imu_data = {
+            'orientation': [msg.orientation.x, msg.orientation.y,
+                          msg.orientation.z, msg.orientation.w],
+            'angular_velocity': [msg.angular_velocity.x,
+                                msg.angular_velocity.y,
+                                msg.angular_velocity.z],
+            'linear_acceleration': [msg.linear_acceleration.x,
+                                   msg.linear_acceleration.y,
+                                   msg.linear_acceleration.z],
+        }
+
+    def cmd_callback(self, msg: Vector3):
+        """Update velocity command."""
+        self.command_vel = np.array([msg.x, msg.y, msg.z])
+
+    def build_observation(self) -> torch.Tensor:
+        """Build observation tensor from sensor data."""
+        if self.joint_pos is None or self.imu_data is None:
+            return None
+
+        # Compute projected gravity
+        quat = self.imu_data['orientation']
+        gravity_proj = self.quat_rotate_inverse(quat, [0, 0, -1])
+
+        obs = np.concatenate([
+            self.joint_pos,
+            self.joint_vel,
+            self.imu_data['angular_velocity'],
+            gravity_proj,
+            self.command_vel,
+        ])
+
+        return torch.tensor(obs, dtype=torch.float32, device=self.device).unsqueeze(0)
+
+    def control_loop(self):
+        """Main control loop."""
+        obs = self.build_observation()
+        if obs is None:
+            return
+
+        # Run policy
+        with torch.no_grad():
+            actions = self.policy(obs)
+
+        # Publish actions
+        msg = Float64MultiArray()
+        msg.data = actions.cpu().numpy().flatten().tolist()
+        self.action_pub.publish(msg)
+
+    @staticmethod
+    def quat_rotate_inverse(quat, vec):
+        """Rotate vector by inverse of quaternion."""
+        # Implementation of quaternion rotation
+        q = np.array(quat)
+        v = np.array(vec)
+        q_conj = np.array([-q[0], -q[1], -q[2], q[3]])
+        return quat_multiply(quat_multiply(q_conj, [v[0], v[1], v[2], 0]), q)[:3]
+
+
+def main():
+    rclpy.init()
+    node = PolicyDeploymentNode()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()
+```
+
+
+### Launch Configuration
+
+```python
+# launch/deploy_policy.launch.py
+from launch import LaunchDescription
+from launch_ros.actions import Node
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
+
+def generate_launch_description():
+    return LaunchDescription([
+        DeclareLaunchArgument(
+            'policy_path',
+            default_value='/models/walking_policy.pt',
+            description='Path to trained policy'
+        ),
+        DeclareLaunchArgument(
+            'control_freq',
+            default_value='50.0',
+            description='Control frequency in Hz'
+        ),
+
+        Node(
+            package='humanoid_deployment',
+            executable='policy_node',
+            name='policy_deployment',
+            parameters=[{
+                'policy_path': LaunchConfiguration('policy_path'),
+                'control_freq': LaunchConfiguration('control_freq'),
+            }],
+            output='screen'
+        ),
+    ])
+```
+
+## Safety Considerations
+
+### Safety Wrapper
+
+```python
+# deployment/safety_wrapper.py
+import numpy as np
+
+class SafetyWrapper:
+    """Safety checks for real robot deployment."""
+
+    def __init__(self, config):
+        self.config = config
+        self.prev_actions = None
+
+    def check_and_clip(self, actions: np.ndarray, joint_pos: np.ndarray,
+                       joint_vel: np.ndarray) ->tuple:
+        """Apply safety checks and return safe actions."""
+        safe_actions = actions.copy()
+        warnings = []
+
+        # 1. Clip to joint limits
+        safe_actions = np.clip(
+            safe_actions,
+            self.config.joint_pos_min,
+            self.config.joint_pos_max
+        )
+
+        # 2. Limit action rate
+        if self.prev_actions is not None:
+action_diff = safe_actions - self.prev_actions
+            max_diff = self.config.max_action_rate * self.config.dt
+            action_diff = np.clip(action_diff, -max_diff, max_diff)
+            safe_actions = self.prev_actions + action_diff
+
+        # 3. Check for dangerous configurations
+        if self._is_dangerous_pose(joint_pos):
+            warnings.append("Dangerous pose detected - limiting actions")
+            safe_actions = self._get_safe_pose()
+
+        # 4. Emergency stop check
+        if np.any(np.abs(joint_vel) > self.config.max_velocity):
+            warnings.append("Velocity limit exceeded - emergency stop")
+            safe_actions = joint_pos  # Hold current position
+
+        self.prev_actions = safe_actions
+        return safe_actions, warnings
+
+    def _is_dangerous_pose(self, joint_pos: np.ndarray) -> bool:
+        """Check if robot is in dangerous configuration."""
+        # Check knee hyperextension
+        knee_angles = joint_pos[self.config.knee_indices]
+        if np.any(knee_angles < self.config.knee_min_safe):
+            return True
+
+        # Check hip limits
+        hip_angles = joint_pos[self.config.hip_indices]
+        if np.any(np.abs(hip_angles) > self.config.hip_max_safe):
+            return True
+
+        return False
+
+    def _get_safe_pose(self) -> np.ndarray:
+        """Return a known safe pose."""
+        return self.config.default_standing_pose
+```
+
+### Gradual Deployment Protocol
+
+```python
+# deployment/gradual_deployment.py
+class GradualDeployment:
+    """Protocol for safe gradual deployment."""
+
+    def __init__(self, policy, safety_wrapper):
+        self.policy = policy
+        self.safety = safety_wrapper
+        self.blend_factor = 0.0  # Start with 0% policy
+
+    def step(self, obs, default_action):
+        """Blend policy action with default action."""
+        policy_action = self.policy(obs)
+        blended = (1 - self.blend_factor) * default_action + \
+                  self.blend_factor * policy_action
+        return self.safety.check_and_clip(blended)
+
+    def increase_blend(self, amount=0.1):
+        """Gradually increase policy influence."""
+        self.blend_factor = min(1.0, self.blend_factor + amount)
+        print(f"Policy blend factor: {self.blend_factor:.1%}")
+```
+
+:::caution Safety First
+Always test policies in simulation extensively before real deployment. Use safety wrappers, start with low gains, and have an emergency stop ready.
+:::
+
+
+## Debugging Sim-to-Real Transfer
+
+### Common Issues and Solutions
+
+| Issue | Symptom | Solution |
+|-------|---------|----------|
+| **Motor delay** | Oscillations, instability | Add delay randomization in training |
+| **Friction mismatch** | Slipping, jerky motion | Identify real friction, randomize |
+| **Mass errors** | Wrong dynamics | System ID, mass randomization |
+| **Sensor noise** | Jittery behavior | Add noise in training |
+| **Timing issues** | Inconsistent behavior | Ensure consistent control rate |
+
+### Diagnostic Tools
+
+```python
+# diagnostics/transfer_diagnostics.py
+import numpy as np
+import matplotlib.pyplot as plt
+
+class TransferDiagnostics:
+    """Tools for diagnosing sim-to-real issues."""
+
+    def __init__(self):
+        self.sim_data = []
+        self.real_data = []
+
+    def log_sim(self, obs, action, next_obs):
+        """Log simulation data."""
+        self.sim_data.append({
+            'obs': obs.copy(),
+            'action': action.copy(),
+            'next_obs': next_obs.copy(),
+        })
+
+    def log_real(self, obs, action, next_obs):
+        """Log real robot data."""
+        self.real_data.append({
+            'obs': obs.copy(),
+            'action': action.copy(),
+            'next_obs': next_obs.copy(),
+        })
+
+    def compare_dynamics(self):
+        """Compare sim and real dynamics."""
+        if not self.sim_data or not self.real_data:
+            print("Need both sim and real data")
+            return
+
+        # Compare state transitions
+        sim_transitions = np.array([d['next_obs'] - d['obs'] for d in self.sim_data])
+        real_transitions = np.array([d['next_obs'] - d['obs'] for d in self.real_data])
+
+        # Compute statistics
+        sim_mean = np.mean(sim_transitions, axis=0)
+        real_mean = np.mean(real_transitions, axis=0)
+        diff = np.abs(sim_mean - real_mean)
+
+        print("State transition differences (sim vs real):")
+        for i, d in enumerate(diff):
+            if d > 0.01:
+                print(f"  State {i}: {d:.4f} (potential mismatch)")
+
+    def plot_comparison(self, state_idx: int, title: str = ""):
+        """Plot sim vs real for specific state."""
+        sim_states = [d['obs'][state_idx] for d in self.sim_data]
+        real_states = [d['obs'][state_idx] for d in self.real_data]
+
+        plt.figure(figsize=(10, 4))
+        plt.plot(sim_states, label='Simulation', alpha=0.7)
+        plt.plot(real_states, label='Real', alpha=0.7)
+        plt.xlabel('Timestep')
+        plt.ylabel(f'State {state_idx}')
+        plt.title(title or f'State {state_idx} Comparison')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+```
+
+## Practical Exercise: Sim-to-Real Pipeline
+
+### Step 1: Train with Randomization
+
+```python
+# Train with comprehensive randomization
+@configclass
+class Sim2RealEnvCfg(HumanoidLocomotionEnvCfg):
+    randomization = RandomizationCfg(
+        physics=PhysicsRandomizationConfig(
+            mass_scale_range=(0.8, 1.2),
+            friction_range=(0.4, 1.6),
+        ),
+        actuators=ActuatorRandomizationConfig(
+            strength_range=(0.7, 1.3),
+            delay_range=(0.0, 0.03),
+        ),
+        sensors=SensorNoiseConfig(
+            joint_pos_noise_std=0.02,
+            joint_vel_noise_std=0.2,
+        ),
+    )
+```
+
+### Step 2: System Identification
+
+```bash
+# Collect data on real robot
+ros2 run humanoid_sysid collect_motor_data --joint all --duration 60
+
+# Run identification
+python scripts/identify_motors.py --data motor_data.csv
+```
+
+### Step 3: Validate in Simulation
+
+```python
+# Test with identified parameters
+env_cfg.robot.actuators.kp = identified_params['kp']
+env_cfg.robot.actuators.kd = identified_params['kd']
+env_cfg.robot.actuators.delay = identified_params['delay']
+
+# Run evaluation
+python scripts/evaluate_policy.py --checkpoint policy.pt --config sim2real
+```
+
+### Step 4: Deploy Gradually
+
+```bash
+# Start with low blend factor
+ros2 launch humanoid_deployment deploy_policy.launch.py \
+    policy_path:=/models/policy.pt \
+    blend_factor:=0.1
+
+# Gradually increase
+ros2 service call /increase_blend std_srvs/srv/Trigger
+```
+
+## Summary
+
+In this chapter, you learned techniques for sim-to-real transfer:
+
+- **Reality Gap**: Understanding differences between simulation and reality
+- **Domain Randomization**: Training robust policies through variation
+- **System Identification**: Measuring real robot parameters
+- **Deployment**: ROS 2 integration for real robots
+- **Safety**: Protecting hardware during deployment
+- **Debugging**: Diagnosing transfer issues
+
+:::tip Key Takeaway
+Successful sim-to-real transfer requires a combination of domain randomization during training, accurate system identification, and careful deployment with safety measures. Start conservative and iterate based on real-world performance.
+:::
+
+## Further Reading
+
+- [Sim-to-Real Robot Learning Survey](https://arxiv.org/abs/2009.13303)
+- [Learning to Walk in Minutes](https://arxiv.org/abs/2109.11978)
+- [Domain Randomization for Sim2Real](https://arxiv.org/abs/1703.06907)
+- [System Identification for Legged Robots](https://arxiv.org/abs/2011.08811)
+
+---
+
+**Module Complete!** You've learned the NVIDIA Isaac platform from simulation to deployment. Next, explore Module 4: Humanoid Robot Development to apply these skills to humanoid-specific challenges.

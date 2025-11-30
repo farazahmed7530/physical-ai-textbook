@@ -1,0 +1,456 @@
+---
+sidebar_position: 2
+title: "Chapter 10: AI-Powered Perception with Isaac ROS"
+---
+
+import { ChapterPersonalizeButton } from '@site/src/components/PersonalizationControls';
+import { ChapterTranslateButton } from '@site/src/components/TranslationControls';
+
+<div style={{display: 'flex', gap: '10px', marginBottom: '20px'}}>
+  <ChapterPersonalizeButton chapterId="isaac-perception" />
+  <ChapterTranslateButton chapterId="isaac-perception" />
+</div>
+
+# AI-Powered Perception with Isaac ROS
+
+Perception is how robots understand their environment. In this chapter, you'll learn about Isaac ROS—NVIDIA's hardware-accelerated ROS 2 packages that bring GPU-powered perception to humanoid robots. We'll cover Visual SLAM for navigation, stereo depth estimation, and AI-powered manipulation.
+
+## Learning Objectives
+
+By the end of this chapter, you will be able to:
+- Understand the Isaac ROS architecture and acceleration benefits
+- Implement Visual SLAM (VSLAM) for robot localization
+- Use stereo cameras for depth perception
+- Deploy DNN-based object detection and segmentation
+- Integrate perception with manipulation pipelines
+
+## Isaac ROS Overview
+
+Isaac ROS provides GPU-accelerated implementations of common robotics algorithms.
+
+### Why GPU Acceleration Matters
+
+| Metric | CPU (Traditional) | GPU (Isaac ROS) |
+|--------|-------------------|-----------------|
+| **VSLAM** | 30 FPS | 120+ FPS |
+| **Stereo Depth** | 15 FPS | 90 FPS |
+| **Object Detection** | 10 FPS | 60+ FPS |
+| **Latency** | 50-100ms | 10-20ms |
+| **Power Efficiency** | Lower | Higher (Jetson) |
+
+
+## Installing Isaac ROS
+
+### Prerequisites
+
+```bash
+# Ensure ROS 2 Humble is installed
+source /opt/ros/humble/setup.bash
+
+# Install NVIDIA Container Toolkit
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
+curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | \
+  sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+
+sudo apt update
+sudo apt install -y nvidia-container-toolkit
+```
+
+### Using Isaac ROS Docker
+
+```bash
+# Clone Isaac ROS common
+mkdir -p ~/workspaces/isaac_ros-dev/src
+cd ~/workspaces/isaac_ros-dev/src
+git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_common.git
+
+# Run development container
+cd ~/workspaces/isaac_ros-dev/src/isaac_ros_common
+./scripts/run_dev.sh
+
+# Inside container, build packages
+cd /workspaces/isaac_ros-dev
+colcon build --symlink-install
+source install/setup.bash
+```
+
+## Visual SLAM (VSLAM)
+
+Visual SLAM enables robots to build maps and localize simultaneously using camera data.
+
+### cuVSLAM Architecture
+
+cuVSLAM uses GPU acceleration for real-time visual odometry and mapping:
+
+1. **Feature Extraction**: CUDA-accelerated ORB or SuperPoint features
+2. **Feature Matching**: GPU-parallel descriptor matching
+3. **Visual Odometry**: Frame-to-frame pose estimation
+4. **Loop Closure**: Detect revisited locations
+5. **Graph Optimization**: Refine trajectory and map
+
+
+### Implementing VSLAM
+
+```python
+# launch/vslam.launch.py
+from launch import LaunchDescription
+from launch_ros.actions import ComposableNodeContainer
+from launch_ros.descriptions import ComposableNode
+
+def generate_launch_description():
+    visual_slam_node = ComposableNode(
+        package='isaac_ros_visual_slam',
+        plugin='nvidia::isaac_ros::visual_slam::VisualSlamNode',
+        name='visual_slam',
+        remappings=[
+            ('stereo_camera/left/image', '/camera/left/image_raw'),
+            ('stereo_camera/left/camera_info', '/camera/left/camera_info'),
+            ('stereo_camera/right/image', '/camera/right/image_raw'),
+            ('stereo_camera/right/camera_info', '/camera/right/camera_info'),
+            ('visual_slam/imu', '/imu/data')
+        ],
+        parameters=[{
+            'enable_imu_fusion': True,
+            'gyro_noise_density': 0.000244,
+            'accel_noise_density': 0.001862,
+            'enable_slam_visualization': True,
+            'map_frame': 'map',
+            'odom_frame': 'odom',
+            'base_frame': 'base_link',
+        }]
+    )
+
+    container = ComposableNodeContainer(
+        name='visual_slam_container',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container_mt',
+        composable_node_descriptions=[visual_slam_node],
+        output='screen'
+    )
+
+    return LaunchDescription([container])
+```
+
+### VSLAM Output Topics
+
+```bash
+# Published topics
+/visual_slam/tracking/odometry        # Robot pose
+/visual_slam/tracking/slam_path       # Trajectory
+/visual_slam/vis/landmarks_cloud      # 3D landmarks
+/visual_slam/status                   # Tracking status
+```
+
+
+## Stereo Depth Estimation
+
+Isaac ROS provides GPU-accelerated stereo depth using the ESS (Efficient Stereo Segmentation) model.
+
+### Implementing Stereo Depth
+
+```python
+# launch/stereo_depth.launch.py
+from launch import LaunchDescription
+from launch_ros.actions import ComposableNodeContainer
+from launch_ros.descriptions import ComposableNode
+
+def generate_launch_description():
+    left_rectify = ComposableNode(
+        package='isaac_ros_image_proc',
+        plugin='nvidia::isaac_ros::image_proc::RectifyNode',
+        name='left_rectify',
+        remappings=[
+            ('image_raw', '/camera/left/image_raw'),
+            ('camera_info', '/camera/left/camera_info'),
+            ('image_rect', '/camera/left/image_rect'),
+        ]
+    )
+
+    right_rectify = ComposableNode(
+        package='isaac_ros_image_proc',
+        plugin='nvidia::isaac_ros::image_proc::RectifyNode',
+        name='right_rectify',
+        remappings=[
+            ('image_raw', '/camera/right/image_raw'),
+            ('camera_info', '/camera/right/camera_info'),
+            ('image_rect', '/camera/right/image_rect'),
+        ]
+    )
+
+    ess_node = ComposableNode(
+        package='isaac_ros_ess',
+        plugin='nvidia::isaac_ros::dnn_stereo_depth::ESSDisparityNode',
+        name='ess_disparity',
+        parameters=[{
+            'engine_file_path': '/models/ess.engine',
+            'threshold': 0.35,
+        }]
+    )
+
+    container = ComposableNodeContainer(
+        name='stereo_depth_container',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container_mt',
+        composable_node_descriptions=[left_rectify, right_rectify, ess_node],
+        output='screen'
+    )
+
+    return LaunchDescription([container])
+```
+
+
+## 3D Reconstruction with Nvblox
+
+Nvblox creates real-time 3D reconstructions for navigation and manipulation.
+
+### Implementing Nvblox
+
+```python
+# launch/nvblox_humanoid.launch.py
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+def generate_launch_description():
+    nvblox_node = Node(
+        package='nvblox_ros',
+        executable='nvblox_node',
+        name='nvblox',
+        parameters=[{
+            'voxel_size': 0.05,
+            'esdf': True,
+            'esdf_2d': True,
+            'max_integration_distance_m': 5.0,
+            'global_frame': 'map',
+            'mesh_update_rate_hz': 5.0,
+        }],
+        remappings=[
+            ('depth/image', '/camera/depth/image_rect_raw'),
+            ('depth/camera_info', '/camera/depth/camera_info'),
+            ('color/image', '/camera/color/image_raw'),
+            ('color/camera_info', '/camera/color/camera_info'),
+        ]
+    )
+
+    return LaunchDescription([nvblox_node])
+```
+
+## Object Detection and Pose Estimation
+
+Isaac ROS provides several DNN-based detection packages for robotics applications.
+
+### DOPE (Deep Object Pose Estimation)
+
+DOPE estimates 6-DoF poses of known objects:
+
+```python
+# launch/dope_detection.launch.py
+from launch import LaunchDescription
+from launch_ros.actions import ComposableNodeContainer
+from launch_ros.descriptions import ComposableNode
+
+def generate_launch_description():
+    encoder_node = ComposableNode(
+        package='isaac_ros_dnn_image_encoder',
+        plugin='nvidia::isaac_ros::dnn_inference::DnnImageEncoderNode',
+        name='dope_encoder',
+        parameters=[{
+            'input_image_width': 640,
+            'input_image_height': 480,
+            'network_image_width': 640,
+            'network_image_height': 480,
+        }],
+        remappings=[('image', '/camera/color/image_raw')]
+    )
+
+    triton_node = ComposableNode(
+        package='isaac_ros_triton',
+        plugin='nvidia::isaac_ros::dnn_inference::TritonNode',
+        name='triton_node',
+        parameters=[{
+            'model_name': 'dope_ketchup',
+            'model_repository_paths': ['/models'],
+        }]
+    )
+
+    dope_decoder = ComposableNode(
+        package='isaac_ros_dope',
+        plugin='nvidia::isaac_ros::dope::DopeDecoderNode',
+        name='dope_decoder',
+        parameters=[{'object_name': 'Ketchup'}]
+    )
+
+    container = ComposableNodeContainer(
+        name='dope_container',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container_mt',
+        composable_node_descriptions=[encoder_node, triton_node, dope_decoder],
+        output='screen'
+    )
+
+    return LaunchDescription([container])
+```
+
+
+## Manipulation Pipeline Integration
+
+Combining perception with manipulation for humanoid robots.
+
+### Complete Manipulation Node
+
+```python
+#!/usr/bin/env python3
+"""Humanoid manipulation node using Isaac ROS perception."""
+
+import rclpy
+from rclpy.node import Node
+from geometry_msgs.msg import PoseStamped
+from vision_msgs.msg import Detection3DArray
+
+class HumanoidManipulator(Node):
+    """Manipulation controller using Isaac ROS perception."""
+
+    def __init__(self):
+        super().__init__('humanoid_manipulator')
+
+        self.detection_sub = self.create_subscription(
+            Detection3DArray,
+            '/detections',
+            self.detection_callback,
+            10
+        )
+
+        self.pose_sub = self.create_subscription(
+            PoseStamped,
+            '/dope/pose',
+            self.pose_callback,
+            10
+        )
+
+        self.target_pose = None
+        self.get_logger().info('Humanoid manipulator initialized')
+
+    def detection_callback(self, msg: Detection3DArray):
+        """Process object detections."""
+        for detection in msg.detections:
+            if detection.results[0].hypothesis.score > 0.8:
+                self.get_logger().info(
+                    f'Detected: {detection.results[0].hypothesis.class_id}'
+                )
+
+    def pose_callback(self, msg: PoseStamped):
+        """Process object pose for grasping."""
+        self.target_pose = msg
+        grasp_pose = self.calculate_grasp_pose(msg)
+        self.execute_grasp(grasp_pose)
+
+    def calculate_grasp_pose(self, object_pose: PoseStamped) -> PoseStamped:
+        """Calculate grasp pose with approach offset."""
+        grasp = PoseStamped()
+        grasp.header = object_pose.header
+        grasp.pose.position.x = object_pose.pose.position.x
+        grasp.pose.position.y = object_pose.pose.position.y
+        grasp.pose.position.z = object_pose.pose.position.z + 0.1
+        grasp.pose.orientation.y = 0.707
+        grasp.pose.orientation.w = 0.707
+        return grasp
+
+    def execute_grasp(self, grasp_pose: PoseStamped):
+        """Execute grasp motion."""
+        self.get_logger().info(f'Executing grasp at: {grasp_pose.pose.position}')
+
+
+def main():
+    rclpy.init()
+    node = HumanoidManipulator()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()
+```
+
+
+## People Detection and Tracking
+
+For human-robot interaction, detecting and tracking people is essential.
+
+### PeopleNet Detection
+
+```python
+# launch/people_detection.launch.py
+from launch import LaunchDescription
+from launch_ros.actions import ComposableNodeContainer
+from launch_ros.descriptions import ComposableNode
+
+def generate_launch_description():
+    encoder = ComposableNode(
+        package='isaac_ros_dnn_image_encoder',
+        plugin='nvidia::isaac_ros::dnn_inference::DnnImageEncoderNode',
+        name='encoder',
+        parameters=[{
+            'network_image_width': 960,
+            'network_image_height': 544,
+        }]
+    )
+
+    peoplenet = ComposableNode(
+        package='isaac_ros_triton',
+        plugin='nvidia::isaac_ros::dnn_inference::TritonNode',
+        name='peoplenet',
+        parameters=[{
+            'model_name': 'peoplenet',
+            'model_repository_paths': ['/models'],
+        }]
+    )
+
+    decoder = ComposableNode(
+        package='isaac_ros_detectnet',
+        plugin='nvidia::isaac_ros::detectnet::DetectNetDecoderNode',
+        name='decoder',
+        parameters=[{
+            'label_list': ['person', 'face', 'bag'],
+            'confidence_threshold': 0.5,
+        }]
+    )
+
+    container = ComposableNodeContainer(
+        name='people_detection_container',
+        namespace='',
+        package='rclcpp_components',
+        executable='component_container_mt',
+        composable_node_descriptions=[encoder, peoplenet, decoder],
+        output='screen'
+    )
+
+    return LaunchDescription([container])
+```
+
+## Summary
+
+In this chapter, you learned about Isaac ROS for GPU-accelerated perception:
+
+- **Visual SLAM**: Real-time localization and mapping with cuVSLAM
+- **Stereo Depth**: High-speed depth estimation with ESS
+- **3D Reconstruction**: Real-time mapping with Nvblox
+- **Object Detection**: DNN-based detection with DOPE
+- **Manipulation Integration**: Connecting perception to robot control
+
+:::tip Key Takeaway
+Isaac ROS provides 4-10x speedup over CPU implementations, enabling real-time perception on edge devices like Jetson. This is essential for humanoid robots that need to perceive and react quickly in dynamic environments.
+:::
+
+## Further Reading
+
+- [Isaac ROS Documentation](https://nvidia-isaac-ros.github.io/)
+- [cuVSLAM Documentation](https://developer.nvidia.com/isaac/cuvslam)
+- [Nvblox Documentation](https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_nvblox/)
+
+---
+
+**Next Chapter:** [Reinforcement Learning for Robot Control](/isaac/reinforcement-learning)

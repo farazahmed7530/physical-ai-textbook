@@ -1,0 +1,205 @@
+<?xml version="1.0"?>
+<!--
+  Simple 4-Joint Robot Arm URDF Model
+  For Physical AI Textbook Interactive Playground
+
+  Joints:
+  - base_joint: Rotates the entire arm around vertical axis
+  - shoulder_joint: Rotates the upper arm up/down
+  - elbow_joint: Rotates the forearm up/down
+  - wrist_joint: Rotates the end effector
+-->
+<robot name="simple_robot_arm">
+
+  <!-- Base Link - Fixed to ground -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.15" length="0.05"/>
+      </geometry>
+      <origin xyz="0 0 0.025" rpy="0 0 0"/>
+      <material name="dark_gray">
+        <color rgba="0.3 0.3 0.35 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.15" length="0.05"/>
+      </geometry>
+      <origin xyz="0 0 0.025" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="2.0"/>
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.02"/>
+    </inertial>
+  </link>
+
+  <!-- Turntable Link - Rotates on base -->
+  <link name="turntable_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.1" length="0.08"/>
+      </geometry>
+      <origin xyz="0 0 0.04" rpy="0 0 0"/>
+      <material name="teal">
+        <color rgba="0.2 0.8 0.7 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.1" length="0.08"/>
+      </geometry>
+      <origin xyz="0 0 0.04" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="1.0"/>
+      <inertia ixx="0.005" ixy="0" ixz="0" iyy="0.005" iyz="0" izz="0.005"/>
+    </inertial>
+  </link>
+
+  <!-- Base Joint - Rotation around vertical axis -->
+  <joint name="base_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="turntable_link"/>
+    <origin xyz="0 0 0.05" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.14159" upper="3.14159" effort="100" velocity="1.0"/>
+  </joint>
+
+  <!-- Upper Arm Link -->
+  <link name="upper_arm_link">
+    <visual>
+      <geometry>
+        <box size="0.06 0.06 0.3"/>
+      </geometry>
+      <origin xyz="0 0 0.15" rpy="0 0 0"/>
+      <material name="light_gray">
+        <color rgba="0.7 0.7 0.75 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+       <box size="0.06 0.06 0.3"/>
+      </geometry>
+      <origin xyz="0 0 0.15" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.8"/>
+      <inertia ixx="0.006" ixy="0" ixz="0" iyy="0.006" iyz="0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <!-- Shoulder Joint - Rotation for upper arm -->
+  <joint name="shoulder_joint" type="revolute">
+    <parent link="turntable_link"/>
+    <child link="upper_arm_link"/>
+    <origin xyz="0 0 0.08" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.57079" upper="1.57079" effort="100" velocity="1.0"/>
+  </joint>
+
+  <!-- Forearm Link -->
+  <link name="forearm_link">
+    <visual>
+      <geometry>
+        <box size="0.05 0.05 0.25"/>
+      </geometry>
+      <origin xyz="0 0 0.125" rpy="0 0 0"/>
+      <material name="orange">
+        <color rgba="1.0 0.5 0.2 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.05 0.05 0.25"/>
+      </geometry>
+      <origin xyz="0 0 0.125" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="0.003" ixy="0" ixz="0" iyy="0.003" iyz="0" izz="0.0005"/>
+    </inertial>
+  </link>
+
+  <!-- Elbow Joint - Rotation for forearm -->
+  <joint name="elbow_joint" type="revolute">
+    <parent link="upper_arm_link"/>
+    <child link="forearm_link"/>
+    <origin xyz="0 0 0.3" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-2.35619" upper="2.35619" effort="50" velocity="1.0"/>
+  </joint>
+
+  <!-- Wrist Link -->
+  <link name="wrist_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.03" length="0.06"/>
+      </geometry>
+      <origin xyz="0 0 0.03" rpy="0 0 0"/>
+      <material name="teal"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.03" length="0.06"/>
+      </geometry>
+      <origin xyz="0 0 0.03" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.2"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001"/>
+    </inertial>
+  </link>
+
+  <!-- Wrist Joint - Rotation for end effector -->
+  <joint name="wrist_joint" type="revolute">
+    <parent link="forearm_link"/>
+    <child link="wrist_link"/>
+    <origin xyz="0 0 0.25" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.14159" upper="3.14159" effort="20" velocity="2.0"/>
+  </joint>
+
+  <!-- End Effector Link (Gripper placeholder) -->
+  <link name="end_effector_link">
+    <visual>
+      <geometry>
+        <box size="0.08 0.04 0.02"/>
+      </geometry>
+      <origin xyz="0 0 0.01" rpy="0 0 0"/>
+      <material name="dark_gray"/>
+    </visual>
+    <visual>
+      <geometry>
+        <box size="0.02 0.04 0.06"/>
+      </geometry>
+      <origin xyz="0.03 0 0.04" rpy="0 0 0"/>
+      <material name="orange"/>
+    </visual>
+    <visual>
+      <geometry>
+        <box size="0.02 0.04 0.06"/>
+      </geometry>
+      <origin xyz="-0.03 0 0.04" rpy="0 0 0"/>
+      <material name="orange"/>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.08 0.04 0.08"/>
+      </geometry>
+      <origin xyz="0 0 0.04" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="0.00005" ixy="0" ixz="0" iyy="0.00005" iyz="0" izz="0.00005"/>
+    </inertial>
+  </link>
+
+  <!-- Fixed joint to attach end effector -->
+  <joint name="end_effector_joint" type="fixed">
+    <parent link="wrist_link"/>
+    <child link="end_effector_link"/>
+    <origin xyz="0 0 0.06" rpy="0 0 0"/>
+  </joint>
+
+</robot>

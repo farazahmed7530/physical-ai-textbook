@@ -1,0 +1,158 @@
+/**
+ * Styles for the RobotPlayground Component
+ * Interactive 3D viewer with code display panel
+ */
+
+.playgroundContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+@media (min-width: 1024px) {
+  .playgroundContainer {
+    flex-direction: row;
+  }
+}
+
+.viewerSection {
+  flex: 1;
+  min-height: 400px;
+}
+
+.codeSection {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: rgba(15, 15, 26, 0.95);
+  border-top: 1px solid rgba(100, 255, 218, 0.2);
+}
+
+@media (min-width: 1024px) {
+  .codeSection {
+    width: 400px;
+    border-top: none;
+    border-left: 1px solid rgba(100, 255, 218, 0.2);
+  }
+}
+
+.codeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(100, 255, 218, 0.05);
+  border-bottom: 1px solid rgba(100, 255, 218, 0.1);
+}
+
+.tabContainer {
+  display: flex;
+  gap: 4px;
+}
+
+.tab {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab:hover {
+  background: rgba(100, 255, 218, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.activeTab {
+  background: rgba(100, 255, 218, 0.2);
+  color: #64ffda;
+}
+
+.jointInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.jointName {
+  color: #64ffda;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.jointAngle {
+  background: rgba(100, 255, 218, 0.15);
+  color: #64ffda;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.codeContainer {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+  max-height: 300px;
+}
+
+@media (min-width: 1024px) {
+  .codeContainer {
+    max-height: none;
+  }
+}
+
+.codeBlock {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: #e0e0e0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.codeBlock code {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.codeFooter {
+  padding: 12px 16px;
+  background: rgba(100, 255, 218, 0.05);
+  border-top: 1px solid rgba(100, 255, 218, 0.1);
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.hint strong {
+  color: #64ffda;
+}
+
+/* Syntax highlighting for code */
+.codeBlock code {
+  color: #e0e0e0;
+}
+
+/* XML/URDF highlighting */
+.codeBlock code.language-xml {
+  color: #e0e0e0;
+}
+
+/* Python highlighting */
+.codeBlock code.language-python {
+  color: #e0e0e0;
+}
