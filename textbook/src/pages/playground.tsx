@@ -12,7 +12,7 @@ const styles = {
   container: {
     display: "flex",
     flexDirection: "column" as const,
-    height: "calc(100vh - 60px)",
+    minHeight: "calc(100vh - 120px)",
     padding: "20px",
     background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)",
   },
@@ -33,7 +33,8 @@ const styles = {
   },
   viewerContainer: {
     flex: 1,
-    minHeight: "500px",
+    minHeight: "600px",
+    maxHeight: "700px",
     borderRadius: "12px",
     overflow: "hidden",
     boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",

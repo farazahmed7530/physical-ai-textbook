@@ -24,52 +24,68 @@ export const RobotModel: React.FC<RobotModelProps> = ({
   useEffect(() => {
     const loader = new URDFLoader();
 
-    // Set the package path for mesh loading (relative to public folder)
+    // Extract base path from urdfPath for mesh loading
+    const basePath = urdfPath.substring(0, urdfPath.lastIndexOf("/") + 1);
     loader.packages = {
-      "": "/urdf/",
+      "": basePath,
     };
 
-    loader.load(urdfPath, (robot: URDFRobot) => {
-      robotRef.current = robot;
-
-      // Center the robot
-      const box = new THREE.Box3().setFromObject(robot);
-      const center = box.getCenter(new THREE.Vector3());
-      robot.position.sub(center);
-      robot.position.y -= box.min.y - center.y;
-
-      // Add robot to the group
-      if (groupRef.current) {
-        // Clear previous robot if any
-        while (groupRef.current.children.length > 0) {
-          groupRef.current.remove(groupRef.current.children[0]);
+    // Use fetch to load URDF as text, then parse
+    fetch(urdfPath)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to load URDF: ${response.status}`);
         }
-        groupRef.current.add(robot);
-      }
+        return response.text();
+      })
+      .then((urdfText) => {
+        const robot = loader.parse(urdfText);
+        return robot;
+      })
+      .then((robot: URDFRobot) => {
+        robotRef.current = robot;
 
-      // Extract joint information
-      const joints: JointState[] = [];
-      Object.entries(robot.joints).forEach(([name, joint]) => {
-        const urdfJoint = joint as URDFJoint;
-        if (
-          urdfJoint.jointType === "revolute" ||
-          urdfJoint.jointType === "continuous"
-        ) {
-          joints.push({
-            name,
-            angle: urdfJoint.angle || 0,
-            min: urdfJoint.limit?.lower ?? -Math.PI,
-            max: urdfJoint.limit?.upper ?? Math.PI,
-          });
+        // Center the robot
+        const box = new THREE.Box3().setFromObject(robot);
+        const center = box.getCenter(new THREE.Vector3());
+        robot.position.sub(center);
+        robot.position.y -= box.min.y - center.y;
+
+        // Add robot to the group
+        if (groupRef.current) {
+          // Clear previous robot if any
+          while (groupRef.current.children.length > 0) {
+            groupRef.current.remove(groupRef.current.children[0]);
+          }
+          groupRef.current.add(robot);
         }
+
+        // Extract joint information
+        const joints: JointState[] = [];
+        Object.entries(robot.joints).forEach(([name, joint]) => {
+          const urdfJoint = joint as URDFJoint;
+          if (
+            urdfJoint.jointType === "revolute" ||
+            urdfJoint.jointType === "continuous"
+          ) {
+            joints.push({
+              name,
+              angle: urdfJoint.angle || 0,
+              min: urdfJoint.limit?.lower ?? -Math.PI,
+              max: urdfJoint.limit?.upper ?? Math.PI,
+            });
+          }
+        });
+
+        if (onJointsLoaded) {
+          onJointsLoaded(joints);
+        }
+
+        setIsLoaded(true);
+      })
+      .catch((error) => {
+        console.error("Error loading URDF:", error);
       });
-
-      if (onJointsLoaded) {
-        onJointsLoaded(joints);
-      }
-
-      setIsLoaded(true);
-    });
 
     return () => {
       if (robotRef.current && groupRef.current) {
