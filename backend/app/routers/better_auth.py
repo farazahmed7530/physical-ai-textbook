@@ -2,6 +2,10 @@
 
 Provides Better Auth-compatible API endpoints that work with the Better Auth client library.
 These endpoints wrap our existing authentication service to maintain compatibility.
+
+Endpoints:
+- POST /api/auth/sign-up/email - Better Auth signup
+- POST /api/auth/sign-in/email - Better Auth signin
 """
 
 import logging
