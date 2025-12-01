@@ -7,7 +7,7 @@
 
 import { useAuth } from "@site/src/components/AuthProvider";
 import { API_BASE_URL } from "@site/src/config";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./styles.module.css";
 
 interface ChapterPersonalizeButtonProps {
