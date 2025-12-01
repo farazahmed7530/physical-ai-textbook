@@ -6,6 +6,7 @@
  * - Handles message sending and receiving
  * - Shows loading states and error handling
  * - Supports selected text context for contextual questions
+ * - Automatically includes current page context
  *
  * Requirements: 3.1
  */
@@ -18,6 +19,25 @@ import type {
   ChatWidgetProps,
   Source,
 } from "./types";
+
+/**
+ * Get the current page context (title and content excerpt).
+ */
+function getCurrentPageContext(): { title: string; content: string } | null {
+  if (typeof document === "undefined") return null;
+
+  // Get page title from breadcrumb or h1
+  const breadcrumb = document.querySelector(".breadcrumbs__link--active");
+  const h1 = document.querySelector("article h1, .markdown h1");
+  const title = breadcrumb?.textContent || h1?.textContent || document.title;
+
+  // Get main content excerpt
+  const article =
+    document.querySelector("article") || document.querySelector(".markdown");
+  const content = article?.textContent?.substring(0, 2000) || "";
+
+  return { title: title.trim(), content: content.trim() };
+}
 
 // Default API endpoint - can be overridden via props
 const DEFAULT_API_ENDPOINT = "http://localhost:8000/api/chat";
@@ -102,6 +122,21 @@ export function ChatWidget({
       setIsLoading(true);
 
       try {
+        // Get current page context
+        const pageContext = getCurrentPageContext();
+
+        // Build context string - include page content if available
+        let contextText = selectedText || undefined;
+        if (pageContext && pageContext.content) {
+          // If we have selected text, prepend page title
+          // If no selected text, use page content as context
+          if (contextText) {
+            contextText = `[Page: ${pageContext.title}]\n${contextText}`;
+          } else {
+            contextText = `[Page: ${pageContext.title}]\n${pageContext.content}`;
+          }
+        }
+
         const response = await fetch(apiEndpoint, {
           method: "POST",
           headers: {
@@ -109,7 +144,7 @@ export function ChatWidget({
           },
           body: JSON.stringify({
             query,
-            selected_text: selectedText || undefined,
+            selected_text: contextText,
             user_id: userId || undefined,
           }),
         });
@@ -240,22 +275,31 @@ export function ChatWidget({
             </button>
           </div>
 
-          {/* Selected text banner */}
-          {selectedText && (
-            <div className={styles.selectedTextBanner}>
-              <span className={styles.selectedTextLabel}>Context:</span>
-              <span className={styles.selectedTextContent}>{selectedText}</span>
-              {onClearSelectedText && (
-                <button
-                  className={styles.clearSelectedText}
-                  onClick={onClearSelectedText}
-                  aria-label="Clear selected text"
-                >
-                  <CloseIcon />
-                </button>
-              )}
-            </div>
-          )}
+          {/* Context banner - shows selected text or current page */}
+          {(() => {
+            const pageContext = getCurrentPageContext();
+            const contextToShow = selectedText || pageContext?.title;
+
+            if (!contextToShow) return null;
+
+            return (
+              <div className={styles.selectedTextBanner}>
+                <span className={styles.selectedTextLabel}>Context:</span>
+                <span className={styles.selectedTextContent}>
+                  {selectedText || pageContext?.title}
+                </span>
+                {selectedText && onClearSelectedText && (
+                  <button
+                    className={styles.clearSelectedText}
+                    onClick={onClearSelectedText}
+                    aria-label="Clear selected text"
+                  >
+                    <CloseIcon />
+                  </button>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Messages */}
           <div className={styles.messagesContainer}>
