@@ -31,7 +31,7 @@ class RAGRequest:
     selected_text: str | None = None
     user_id: str | None = None
     top_k: int = 5
-    score_threshold: float = 0.7
+    score_threshold: float = 0.5  # Lowered from 0.7 for better recall
 
 
 @dataclass

@@ -194,8 +194,8 @@ class TestResponseGenerator:
     def test_has_relevant_results_false(self, generator):
         """Test relevance check with no relevant chunks."""
         chunks = [
-            create_mock_chunk(score=0.5),
-            create_mock_chunk(score=0.4),
+            create_mock_chunk(score=0.4),  # Below 0.5 threshold
+            create_mock_chunk(score=0.3),
         ]
 
         assert generator._has_relevant_results(chunks) is False
@@ -228,7 +228,7 @@ class TestResponseGenerator:
     @pytest.mark.asyncio
     async def test_generate_response_fallback(self, generator):
         """Test fallback response when no relevant chunks."""
-        chunks = [create_mock_chunk(score=0.5)]  # Below threshold
+        chunks = [create_mock_chunk(score=0.4)]  # Below 0.5 threshold
         retrieval_result = RetrievalResult(
             query="What is quantum computing?",
             processed_query="what is quantum computing?",

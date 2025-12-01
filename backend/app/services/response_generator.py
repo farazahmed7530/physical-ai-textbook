@@ -65,7 +65,7 @@ class GeneratedResponse:
 
 
 # Minimum relevance score threshold for considering results relevant
-MIN_RELEVANCE_THRESHOLD = 0.7
+MIN_RELEVANCE_THRESHOLD = 0.5  # Lowered from 0.7 for better recall
 
 # System prompt for the RAG chatbot
 SYSTEM_PROMPT = """You are a helpful AI tutor for a Physical AI & Humanoid Robotics textbook. Your role is to answer questions about the textbook content accurately and helpfully.

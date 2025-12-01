@@ -58,15 +58,17 @@ class QueryProcessor:
         "ai": ["artificial intelligence", "machine learning", "ml"],
         "vision": ["computer vision", "visual perception", "image processing"],
         "motion": ["movement", "locomotion", "kinematics"],
-        "sensor": ["sensors", "perception", "sensing"],
+        "sensor": ["sensors", "perception", "sensing", "lidar", "camera", "imu"],
         "control": ["controller", "controlling", "actuation"],
         "learning": ["training", "machine learning", "neural network"],
         "planning": ["path planning", "motion planning", "trajectory"],
         "manipulation": ["grasping", "handling", "pick and place"],
-        "navigation": ["localization", "mapping", "slam"],
+        "navigation": ["localization", "mapping", "slam", "lidar"],
         "hri": ["human robot interaction", "human-robot interaction"],
         "safety": ["safe", "collision avoidance", "risk"],
         "ethics": ["ethical", "responsible ai", "fairness"],
+        "lidar": ["light detection and ranging", "laser sensor", "3d mapping", "point cloud"],
+        "map": ["mapping", "slam", "localization", "navigation"],
     }
 
     def __init__(

@@ -73,7 +73,7 @@ class VectorRetriever:
 
     # Default retrieval parameters
     DEFAULT_TOP_K = 5
-    DEFAULT_SCORE_THRESHOLD = 0.7
+    DEFAULT_SCORE_THRESHOLD = 0.5  # Lowered from 0.7 for better recall
     MAX_TOP_K = 20
 
     def __init__(
