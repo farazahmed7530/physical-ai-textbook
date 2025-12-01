@@ -11,6 +11,7 @@
  * - Provide auth hooks for components
  */
 
+import { authClient } from "@site/src/lib/auth";
 import React, {
   createContext,
   useCallback,
@@ -31,24 +32,6 @@ import type {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 /**
- * Convert Better Auth user to our User type
- */
-function convertBetterAuthUser(session: BetterAuthSession | null): User | null {
-  if (!session) return null;
-
-  return {
-    id: session.user.id,
-    email: session.user.email,
-    software_experience: session.user.software_experience,
-    hardware_experience: session.user.hardware_experience,
-    programming_languages: session.user.programming_languages,
-    robotics_experience: session.user.robotics_experience,
-    ai_experience: session.user.ai_experience,
-    created_at: session.user.created_at,
-  };
-}
-
-/**
  * AuthProvider component using Better Auth.
  */
 export function AuthProvider({
@@ -62,11 +45,8 @@ export function AuthProvider({
    * Initialize auth state from Better Auth session on mount.
    */
   useEffect(() => {
-    const session = betterAuth.getSession();
-    if (session) {
-      setUser(convertBetterAuthUser(session));
-      setToken(session.token);
-    }
+    // Better Auth React client handles session automatically
+    // We'll check session state when needed
     setIsLoading(false);
   }, []);
 
@@ -75,9 +55,29 @@ export function AuthProvider({
    */
   const login = useCallback(
     async (email: string, password: string): Promise<void> => {
-      const session = await betterAuth.signIn(email, password);
-      setUser(convertBetterAuthUser(session));
-      setToken(session.token);
+      const { data, error } = await authClient.signIn.email({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw new Error(error.message || "Login failed");
+      }
+
+      // Update local state with Better Auth session data
+      if (data?.user) {
+        setUser({
+          id: data.user.id,
+          email: data.user.email,
+          software_experience: (data.user as any).software_experience,
+          hardware_experience: (data.user as any).hardware_experience,
+          programming_languages: (data.user as any).programming_languages,
+          robotics_experience: (data.user as any).robotics_experience,
+          ai_experience: (data.user as any).ai_experience,
+          created_at: data.user.createdAt.toISOString(),
+        });
+        setToken(data.token || null);
+      }
     },
     []
   );
@@ -91,15 +91,32 @@ export function AuthProvider({
       password: string,
       background: UserBackground
     ): Promise<void> => {
-      const session = await betterAuth.signUp(email, password, {
-        software_experience: background.software_experience,
-        hardware_experience: background.hardware_experience,
-        programming_languages: background.programming_languages || [],
-        robotics_experience: background.robotics_experience || false,
-        ai_experience: background.ai_experience || false,
+      const { data, error } = await authClient.signUp.email({
+        email,
+        password,
+        name: email.split("@")[0], // Use email prefix as name
+        // Add background data as custom fields
+        ...background,
       });
-      setUser(convertBetterAuthUser(session));
-      setToken(session.token);
+
+      if (error) {
+        throw new Error(error.message || "Registration failed");
+      }
+
+      // Update local state with Better Auth session data
+      if (data?.user) {
+        setUser({
+          id: data.user.id,
+          email: data.user.email,
+          software_experience: background.software_experience,
+          hardware_experience: background.hardware_experience,
+          programming_languages: background.programming_languages || [],
+          robotics_experience: background.robotics_experience || false,
+          ai_experience: background.ai_experience || false,
+          created_at: data.user.createdAt.toISOString(),
+        });
+        setToken(data.token || null);
+      }
     },
     []
   );
@@ -108,7 +125,7 @@ export function AuthProvider({
    * Logout the current user using Better Auth.
    */
   const logout = useCallback(async (): Promise<void> => {
-    await betterAuth.signOut();
+    await authClient.signOut();
     setUser(null);
     setToken(null);
   }, []);
@@ -118,10 +135,20 @@ export function AuthProvider({
    */
   const refreshToken = useCallback(async (): Promise<void> => {
     // Better Auth handles token refresh automatically
-    const session = betterAuth.getSession();
-    if (session) {
-      setUser(convertBetterAuthUser(session));
-      setToken(session.token);
+    // Just check if we still have a valid session
+    const { data: session, error } = await authClient.getSession();
+    if (session?.user) {
+      setUser({
+        id: session.user.id,
+        email: session.user.email,
+        software_experience: (session.user as any).software_experience,
+        hardware_experience: (session.user as any).hardware_experience,
+        programming_languages: (session.user as any).programming_languages,
+        robotics_experience: (session.user as any).robotics_experience,
+        ai_experience: (session.user as any).ai_experience,
+        created_at: session.user.createdAt.toISOString(),
+      });
+      setToken((session as any).token || null);
     } else {
       await logout();
       throw new Error("Session expired");
