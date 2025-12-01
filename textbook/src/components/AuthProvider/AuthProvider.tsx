@@ -136,7 +136,7 @@ export function AuthProvider({
   const refreshToken = useCallback(async (): Promise<void> => {
     // Better Auth handles token refresh automatically
     // Just check if we still have a valid session
-    const { data: session, error } = await authClient.getSession();
+    const { data: session } = await authClient.getSession();
     if (session?.user) {
       setUser({
         id: session.user.id,

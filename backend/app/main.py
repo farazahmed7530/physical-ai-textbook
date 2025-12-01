@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import get_settings
 from app.routers import auth_router, chat_router, health_router, personalize_router, translate_router
+from app.routers.better_auth import router as better_auth_router
 from app.db import init_postgres, close_postgres, init_qdrant, close_qdrant
 
 # Configure logging
@@ -72,6 +73,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(chat_router)
     app.include_router(auth_router)
+    app.include_router(better_auth_router)  # Better Auth compatible endpoints
     app.include_router(personalize_router)
     app.include_router(translate_router)
 
