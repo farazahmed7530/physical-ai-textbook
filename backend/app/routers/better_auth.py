@@ -116,14 +116,18 @@ async def better_auth_sign_up(
         )
 
     # Convert our response to Better Auth format
+    # Convert datetime to ISO string if needed
+    created_at_str = result.user.created_at if isinstance(result.user.created_at, str) else result.user.created_at.isoformat()
+    expires_at_str = result.token.expires_at if isinstance(result.token.expires_at, str) else result.token.expires_at.isoformat()
+
     return BetterAuthSignUpResponse(
         user=BetterAuthUser(
             id=result.user.id,
             email=result.user.email,
             name=request.name,
             emailVerified=False,
-            createdAt=result.user.created_at,
-            updatedAt=result.user.created_at,
+            createdAt=created_at_str,
+            updatedAt=created_at_str,
             software_experience=result.user.software_experience,
             hardware_experience=result.user.hardware_experience,
             programming_languages=result.user.programming_languages,
@@ -132,7 +136,7 @@ async def better_auth_sign_up(
         ),
         session=BetterAuthSession(
             token=result.token.access_token,
-            expiresAt=result.token.expires_at,
+            expiresAt=expires_at_str,
         ),
         token=result.token.access_token,
     )
@@ -167,14 +171,18 @@ async def better_auth_sign_in(
         )
 
     # Convert our response to Better Auth format
+    # Convert datetime to ISO string if needed
+    created_at_str = result.user.created_at if isinstance(result.user.created_at, str) else result.user.created_at.isoformat()
+    expires_at_str = result.token.expires_at if isinstance(result.token.expires_at, str) else result.token.expires_at.isoformat()
+
     return BetterAuthSignInResponse(
         user=BetterAuthUser(
             id=result.user.id,
             email=result.user.email,
             name=request.email.split("@")[0],  # Use email prefix as name
             emailVerified=False,
-            createdAt=result.user.created_at,
-            updatedAt=result.user.created_at,
+            createdAt=created_at_str,
+            updatedAt=created_at_str,
             software_experience=result.user.software_experience,
             hardware_experience=result.user.hardware_experience,
             programming_languages=result.user.programming_languages,
@@ -183,7 +191,7 @@ async def better_auth_sign_in(
         ),
         session=BetterAuthSession(
             token=result.token.access_token,
-            expiresAt=result.token.expires_at,
+            expiresAt=expires_at_str,
         ),
         token=result.token.access_token,
     )

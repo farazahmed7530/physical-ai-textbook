@@ -7,7 +7,7 @@
 
 import { useAuth } from "@site/src/components/AuthProvider";
 import { API_BASE_URL } from "@site/src/config";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./styles.module.css";
 
 interface ChapterTranslateButtonProps {
@@ -22,6 +22,13 @@ export function ChapterTranslateButton({
   const [error, setError] = useState<string | null>(null);
   const [isTranslated, setIsTranslated] = useState(false);
   const originalContentRef = useRef<string | null>(null);
+
+  // Reset state when chapterId changes (navigating to a new page)
+  useEffect(() => {
+    setIsTranslated(false);
+    setError(null);
+    originalContentRef.current = null;
+  }, [chapterId]);
 
   const handleTranslate = useCallback(async () => {
     if (!isAuthenticated || !token || isLoading) return;

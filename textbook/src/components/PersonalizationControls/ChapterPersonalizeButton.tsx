@@ -80,6 +80,13 @@ export function ChapterPersonalizeButton({
   const [isPersonalized, setIsPersonalized] = useState(false);
   const originalContentRef = useRef<string | null>(null);
 
+  // Reset state when chapterId changes (navigating to a new page)
+  useEffect(() => {
+    setIsPersonalized(false);
+    setError(null);
+    originalContentRef.current = null;
+  }, [chapterId]);
+
   const handlePersonalize = useCallback(async () => {
     if (!isAuthenticated || !token || isLoading) return;
 
