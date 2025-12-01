@@ -1,15 +1,28 @@
 # Physical AI & Humanoid Robotics Textbook
 
+[![Better Auth](https://img.shields.io/badge/Auth-Better%20Auth-blue)](https://www.better-auth.com/)
+[![Docusaurus](https://img.shields.io/badge/Built%20with-Docusaurus-green)](https://docusaurus.io/)
+[![Three.js](https://img.shields.io/badge/3D-Three.js-black)](https://threejs.org/)
+
 A comprehensive textbook for learning Physical AI and Humanoid Robotics, built with [Docusaurus](https://docusaurus.io/).
+
+## 🎯 Hackathon Features
+
+- 🔐 **Better Auth Integration** - Secure authentication with background questions ([See Details](./BETTER_AUTH.md))
+- ✨ **AI-Powered Personalization** - Content adapts to user experience level
+- 🌐 **Urdu Translation** - Full chapter translation with RTL support
+- 🤖 **3D Robot Playground** - Interactive Three.js robot simulation
+- 💬 **RAG Chatbot** - AI assistant with textbook knowledge
+- 📊 **Interactive Mind Maps** - Visual learning aids with Mermaid
 
 ## Features
 
-- 📚 12 chapters covering fundamentals to advanced topics
-- 🎨 Mermaid diagrams for visual explanations
-- 💻 Code examples in Python
+- 📚 13 chapters covering fundamentals to advanced topics
+- 🎨 Mermaid diagrams and mind maps for visual explanations
+- 💻 Code examples in Python with live demos
 - 🌙 Dark mode support
 - 📱 Responsive design for all devices
-- 🤖 AI Chat Assistant integration (coming soon)
+- 🤖 Interactive 3D robot simulations
 
 ## Getting Started
 

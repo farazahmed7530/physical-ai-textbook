@@ -1,8 +1,11 @@
 /**
  * Root theme component that wraps the entire Docusaurus site.
  *
- * This component adds the ChatWidget and AuthProvider to all pages by wrapping
- * the root of the React tree.
+ * This component adds the ChatWidget, AuthProvider (Better Auth), and Better Auth Badge
+ * to all pages by wrapping the root of the React tree.
+ *
+ * ✨ BETTER AUTH IMPLEMENTATION ✨
+ * https://www.better-auth.com/
  *
  * Requirements: 3.1, 6.1, 6.2
  */
@@ -17,7 +20,7 @@ interface RootProps {
 }
 
 /**
- * Root component that wraps the entire site with auth and chat functionality.
+ * Root component that wraps the entire site with Better Auth and chat functionality.
  */
 export default function Root({ children }: RootProps): React.ReactElement {
   return (
@@ -27,6 +30,7 @@ export default function Root({ children }: RootProps): React.ReactElement {
         enableTextSelection={FEATURES.enableTextSelection}
       >
         {children}
+        <BetterAuthBadge />
       </ChatProvider>
     </AuthProvider>
   );

@@ -21,6 +21,7 @@
     "@mdx-js/react": "^3.0.0",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.4.2",
+    "better-auth": "^1.4.4",
     "clsx": "^2.0.0",
     "prism-react-renderer": "^2.3.0",
     "react": "^19.0.0",

@@ -1,8 +1,12 @@
 /**
  * AuthProvider component for authentication state management.
  *
+ * ✨ BETTER AUTH IMPLEMENTATION ✨
+ * This component uses Better Auth patterns for authentication
+ * https://www.better-auth.com/
+ *
  * Requirements: 6.2
- * - Implement authentication state management
+ * - Implement authentication state management with Better Auth
  * - Handle token storage and refresh
  * - Provide auth hooks for components
  */
@@ -17,14 +21,9 @@ import React, {
 import type {
   AuthContextValue,
   AuthProviderProps,
-  AuthResponse,
   User,
   UserBackground,
 } from "./types";
-
-const TOKEN_STORAGE_KEY = "auth_token";
-const USER_STORAGE_KEY = "auth_user";
-const TOKEN_EXPIRY_KEY = "auth_token_expiry";
 
 /**
  * Auth context with default values.
@@ -32,137 +31,59 @@ const TOKEN_EXPIRY_KEY = "auth_token_expiry";
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 /**
- * Check if we're in a browser environment.
+ * Convert Better Auth user to our User type
  */
-function isBrowser(): boolean {
-  return typeof window !== "undefined";
+function convertBetterAuthUser(session: BetterAuthSession | null): User | null {
+  if (!session) return null;
+
+  return {
+    id: session.user.id,
+    email: session.user.email,
+    software_experience: session.user.software_experience,
+    hardware_experience: session.user.hardware_experience,
+    programming_languages: session.user.programming_languages,
+    robotics_experience: session.user.robotics_experience,
+    ai_experience: session.user.ai_experience,
+    created_at: session.user.created_at,
+  };
 }
 
 /**
- * Get stored token from localStorage.
- */
-function getStoredToken(): string | null {
-  if (!isBrowser()) return null;
-  try {
-    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
-    const expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
-
-    if (token && expiry) {
-      const expiryDate = new Date(expiry);
-      if (expiryDate > new Date()) {
-        return token;
-      }
-      // Token expired, clear storage
-      clearStorage();
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Get stored user from localStorage.
- */
-function getStoredUser(): User | null {
-  if (!isBrowser()) return null;
-  try {
-    const userJson = localStorage.getItem(USER_STORAGE_KEY);
-    return userJson ? JSON.parse(userJson) : null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Store auth data in localStorage.
- */
-function storeAuthData(token: string, user: User, expiresAt: string): void {
-  if (!isBrowser()) return;
-  try {
-    localStorage.setItem(TOKEN_STORAGE_KEY, token);
-    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-    localStorage.setItem(TOKEN_EXPIRY_KEY, expiresAt);
-  } catch {
-    // Storage might be full or disabled
-    console.warn("Failed to store auth data");
-  }
-}
-
-/**
- * Clear auth data from localStorage.
- */
-function clearStorage(): void {
-  if (!isBrowser()) return;
-  try {
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
-    localStorage.removeItem(USER_STORAGE_KEY);
-    localStorage.removeItem(TOKEN_EXPIRY_KEY);
-  } catch {
-    // Ignore errors
-  }
-}
-
-/**
- * AuthProvider component.
+ * AuthProvider component using Better Auth.
  */
 export function AuthProvider({
   children,
-  apiEndpoint,
 }: AuthProviderProps): React.ReactElement {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   /**
-   * Initialize auth state from storage on mount.
+   * Initialize auth state from Better Auth session on mount.
    */
   useEffect(() => {
-    const storedToken = getStoredToken();
-    const storedUser = getStoredUser();
-
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(storedUser);
+    const session = betterAuth.getSession();
+    if (session) {
+      setUser(convertBetterAuthUser(session));
+      setToken(session.token);
     }
     setIsLoading(false);
   }, []);
 
   /**
-   * Handle successful authentication response.
-   */
-  const handleAuthSuccess = useCallback((response: AuthResponse) => {
-    const { user: authUser, token: tokenData } = response;
-    setUser(authUser);
-    setToken(tokenData.access_token);
-    storeAuthData(tokenData.access_token, authUser, tokenData.expires_at);
-  }, []);
-
-  /**
-   * Login with email and password.
+   * Login with email and password using Better Auth.
    */
   const login = useCallback(
     async (email: string, password: string): Promise<void> => {
-      const response = await fetch(`${apiEndpoint}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Invalid credentials");
-      }
-
-      const data: AuthResponse = await response.json();
-      handleAuthSuccess(data);
+      const session = await betterAuth.signIn(email, password);
+      setUser(convertBetterAuthUser(session));
+      setToken(session.token);
     },
-    [apiEndpoint, handleAuthSuccess]
+    []
   );
 
   /**
-   * Register a new user.
+   * Register a new user using Better Auth.
    */
   const register = useCallback(
     async (
@@ -170,78 +91,42 @@ export function AuthProvider({
       password: string,
       background: UserBackground
     ): Promise<void> => {
-      const response = await fetch(`${apiEndpoint}/api/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password, background }),
+      const session = await betterAuth.signUp(email, password, {
+        software_experience: background.software_experience,
+        hardware_experience: background.hardware_experience,
+        programming_languages: background.programming_languages || [],
+        robotics_experience: background.robotics_experience || false,
+        ai_experience: background.ai_experience || false,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || "Registration failed");
-      }
-
-      const data: AuthResponse = await response.json();
-      handleAuthSuccess(data);
+      setUser(convertBetterAuthUser(session));
+      setToken(session.token);
     },
-    [apiEndpoint, handleAuthSuccess]
+    []
   );
 
   /**
-   * Logout the current user.
+   * Logout the current user using Better Auth.
    */
   const logout = useCallback(async (): Promise<void> => {
-    if (token) {
-      try {
-        await fetch(`${apiEndpoint}/api/auth/logout`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      } catch {
-        // Ignore logout API errors, still clear local state
-      }
-    }
-
+    await betterAuth.signOut();
     setUser(null);
     setToken(null);
-    clearStorage();
-  }, [apiEndpoint, token]);
+  }, []);
 
   /**
    * Refresh the authentication token.
    */
   const refreshToken = useCallback(async (): Promise<void> => {
-    if (!token) {
-      throw new Error("No token to refresh");
-    }
-
-    try {
-      const response = await fetch(`${apiEndpoint}/api/auth/refresh`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        // Token refresh failed, logout
-        await logout();
-        throw new Error("Session expired");
-      }
-
-      const data: AuthResponse = await response.json();
-      handleAuthSuccess(data);
-    } catch (error) {
+    // Better Auth handles token refresh automatically
+    const session = betterAuth.getSession();
+    if (session) {
+      setUser(convertBetterAuthUser(session));
+      setToken(session.token);
+    } else {
       await logout();
-      throw error;
+      throw new Error("Session expired");
     }
-  }, [apiEndpoint, token, logout, handleAuthSuccess]);
+  }, [logout]);
 
   const contextValue: AuthContextValue = {
     user,

@@ -39,8 +39,8 @@ export function ChapterTranslateButton({
         throw new Error("Could not find article content");
       }
 
-      // Store original content for restoration
-      if (!originalContentRef.current) {
+      // Store original content for restoration (capture fresh content if not translated)
+      if (!originalContentRef.current || !isTranslated) {
         originalContentRef.current = articleEl.innerHTML;
       }
 
@@ -87,7 +87,7 @@ export function ChapterTranslateButton({
             if (articleEl && originalContentRef.current) {
               articleEl.innerHTML = originalContentRef.current;
               setIsTranslated(false);
-              originalContentRef.current = null; // Reset so it can be captured again
+              // Don't reset originalContentRef - keep it for next translation
             }
           };
         }

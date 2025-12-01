@@ -96,8 +96,8 @@ export function ChapterPersonalizeButton({
         throw new Error("Could not find article content");
       }
 
-      // Store original content for restoration
-      if (!originalContentRef.current) {
+      // Store original content for restoration (capture fresh content if not personalized)
+      if (!originalContentRef.current || !isPersonalized) {
         originalContentRef.current = articleEl.innerHTML;
       }
 
@@ -143,7 +143,7 @@ export function ChapterPersonalizeButton({
             if (articleEl && originalContentRef.current) {
               articleEl.innerHTML = originalContentRef.current;
               setIsPersonalized(false);
-              originalContentRef.current = null; // Reset so it can be captured again
+              // Don't reset originalContentRef - keep it for next personalization
             }
           };
         }
