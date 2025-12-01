@@ -276,30 +276,21 @@ export function ChatWidget({
           </div>
 
           {/* Context banner - shows selected text or current page */}
-          {(() => {
-            const pageContext = getCurrentPageContext();
-            const contextToShow = selectedText || pageContext?.title;
-
-            if (!contextToShow) return null;
-
-            return (
-              <div className={styles.selectedTextBanner}>
-                <span className={styles.selectedTextLabel}>Context:</span>
-                <span className={styles.selectedTextContent}>
-                  {selectedText || pageContext?.title}
-                </span>
-                {selectedText && onClearSelectedText && (
-                  <button
-                    className={styles.clearSelectedText}
-                    onClick={onClearSelectedText}
-                    aria-label="Clear selected text"
-                  >
-                    <CloseIcon />
-                  </button>
-                )}
-              </div>
-            );
-          })()}
+          {selectedText && (
+            <div className={styles.selectedTextBanner}>
+              <span className={styles.selectedTextLabel}>Context:</span>
+              <span className={styles.selectedTextContent}>{selectedText}</span>
+              {onClearSelectedText && (
+                <button
+                  className={styles.clearSelectedText}
+                  onClick={onClearSelectedText}
+                  aria-label="Clear selected text"
+                >
+                  <CloseIcon />
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Messages */}
           <div className={styles.messagesContainer}>
