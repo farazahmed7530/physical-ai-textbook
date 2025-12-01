@@ -10,6 +10,7 @@
  * Requirements: 3.1, 6.1, 6.2
  */
 
+import BrowserOnly from "@docusaurus/BrowserOnly";
 import { AuthProvider } from "@site/src/components/AuthProvider";
 import { ChatProvider } from "@site/src/components/ChatWidget";
 import { API_BASE_URL, API_ENDPOINTS, FEATURES } from "@site/src/config";
@@ -30,7 +31,13 @@ export default function Root({ children }: RootProps): React.ReactElement {
         enableTextSelection={FEATURES.enableTextSelection}
       >
         {children}
-        <BetterAuthBadge />
+        <BrowserOnly>
+          {() => {
+            const BetterAuthBadge =
+              require("@site/src/components/BetterAuthBadge").default;
+            return <BetterAuthBadge />;
+          }}
+        </BrowserOnly>
       </ChatProvider>
     </AuthProvider>
   );
