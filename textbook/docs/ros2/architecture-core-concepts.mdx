@@ -13,7 +13,17 @@ import { ChapterTranslateButton } from '@site/src/components/TranslationControls
 
 # ROS 2 Architecture and Core Concepts
 
-Welcome to the Robot Operating System 2 (ROS 2)—the middleware that serves as the nervous system of modern robots. In this chapter, you'll learn how ROS 2 enables different parts of a robot to communicate, coordinate, and work together as a unified system. Understanding ROS 2 is essential for building any sophisticated Physical AI system.
+> **Estimated Time:** 60 minutes | **Difficulty:** Intermediate
+
+Welcome to the Robot Operating System 2 (ROS 2)—the middleware that serves as the nervous system of modern robots. In this chapter, you'll learn how ROS 2 enables different parts of a robot to communicate, coordinate, and work together as a unified system.
+
+:::info What You'll Build
+By the end of this chapter, you'll create your first ROS 2 node that publishes sensor data and subscribes to control commands—the foundation of every robot system.
+:::
+
+:::tip Why This Matters
+ROS 2 is used by Boston Dynamics, NASA, Amazon Robotics, and thousands of robotics companies. Understanding ROS 2 is essential for any robotics career.
+:::
 
 ## Learning Objectives
 
@@ -51,15 +61,33 @@ graph LR
     D -->|Evolution| H
 ```
 
+### ROS 1 vs ROS 2: Complete Comparison
+
 | Feature | ROS 1 | ROS 2 |
 |---------|-------|-------|
-| **Architecture** | Centralized (roscore) | Distributed (no master) |
+| **Architecture** | Centralized (roscore required) | Distributed (no master needed) |
 | **Communication** | Custom TCP/UDP | DDS (Data Distribution Service) |
-| **Real-time** | Not supported | Supported |
-| **Security** | None built-in | SROS2 (encryption, auth) |
-| **Platforms** | Linux only | Linux, Windows, macOS |
-| **Lifecycle** | None | Managed node lifecycle |
-| **QoS** | Limited | Full QoS policies |
+| **Real-time** | Not supported | Supported with proper configuration |
+| **Security** | None built-in | SROS2 (encryption, authentication) |
+| **Platforms** | Linux only | Linux, Windows, macOS, RTOS |
+| **Lifecycle** | None | Managed node lifecycle states |
+| **QoS** | Limited (TCPROS/UDPROS) | Full QoS policies (reliability, durability) |
+| **Discovery** | Master-based | Automatic peer discovery |
+| **Multi-robot** | Complex setup | Native support |
+| **Python** | Python 2/3 | Python 3 only |
+| **Build System** | catkin | colcon + ament |
+| **Message Format** | .msg files | .msg + .idl files |
+| **Status** | Maintenance only (EOL 2025) | Active development |
+
+<div className="key-takeaway">
+
+**Why ROS 2?** The shift from ROS 1 to ROS 2 isn't just an upgrade—it's a fundamental redesign for production robotics. ROS 2's distributed architecture, real-time capabilities, and built-in security make it suitable for commercial deployment, not just research.
+
+</div>
+
+:::tip Migration Note
+If you're coming from ROS 1, the biggest conceptual change is the removal of the master node. In ROS 2, nodes discover each other automatically through DDS, making your system more resilient to single points of failure.
+:::
 
 ### ROS 2 Design Principles
 
@@ -144,9 +172,11 @@ graph TB
     F -->|Signals| G
 ```
 
-:::tip Design Principle
+<div className="key-takeaway">
+
 Each node should do one thing well. This modularity makes your system easier to develop, test, and maintain. A camera node reads images; a perception node processes them—they don't do both.
-:::
+
+</div>
 
 ### Creating Your First Node
 
@@ -954,6 +984,62 @@ graph TB
 | **Cancelable** | N/A | No | Yes |
 | **Best For** | Streaming data | Quick queries | Long-running tasks |
 
+<div className="hands-on-exercise">
+
+#### Exercise: Create Your First ROS 2 Publisher-Subscriber System
+
+In this exercise, you'll create a simple publisher that sends messages and a subscriber that receives them.
+
+**Step 1:** Create a new Python file called `simple_publisher.py`:
+```python
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import String
+
+class SimplePublisher(Node):
+    def __init__(self):
+        super().__init__('simple_publisher')
+        self.publisher = self.create_publisher(String, 'hello_topic', 10)
+        self.timer = self.create_timer(1.0, self.publish_message)
+        self.count = 0
+
+    def publish_message(self):
+        msg = String()
+        msg.data = f'Hello, ROS 2! Count: {self.count}'
+        self.publisher.publish(msg)
+        self.get_logger().info(f'Published: {msg.data}')
+        self.count += 1
+
+def main():
+    rclpy.init()
+    node = SimplePublisher()
+    rclpy.spin(node)
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
+```
+
+**Step 2:** Run the publisher:
+```bash
+python3 simple_publisher.py
+```
+
+**Step 3:** In another terminal, echo the topic:
+```bash
+ros2 topic echo /hello_topic
+```
+
+<div className="expected-output">
+data: 'Hello, ROS 2! Count: 0'
+---
+data: 'Hello, ROS 2! Count: 1'
+---
+data: 'Hello, ROS 2! Count: 2'
+</div>
+
+</div>
+
 ## ROS 2 Command Line Tools
 
 Essential commands for working with ROS 2:
@@ -993,23 +1079,73 @@ ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose "{pose: 
 ros2 run rqt_graph rqt_graph
 ```
 
-## Summary
+<div className="knowledge-check">
 
-In this chapter, you learned the fundamental building blocks of ROS 2:
+<div className="question">
+<span className="question-number">Q1.</span> Which ROS 2 communication pattern should you use for streaming sensor data at 30 Hz?
+<div className="options">
 
+- A) Services
+- B) Topics ✓
+- C) Actions
+- D) Parameters
+
+</div>
+</div>
+
+<div className="question">
+<span className="question-number">Q2.</span> What is the main advantage of using Actions over Services?
+<div className="options">
+
+- A) Actions are faster
+- B) Actions provide feedback during execution and can be canceled ✓
+- C) Actions use less memory
+- D) Actions don't require a server
+
+</div>
+</div>
+
+<div className="question">
+<span className="question-number">Q3.</span> Complete the code to create a publisher:
+```python
+self.publisher = self.create_publisher(
+    String,
+    '/my_topic',
+    ___  # What goes here?
+)
+```
+<div className="options">
+
+- A) `'reliable'`
+- B) `10` (queue size) ✓
+- C) `True`
+- D) `None`
+
+</div>
+</div>
+
+</div>
+
+<div className="chapter-summary">
+
+**What you learned:**
 - **Nodes** are independent processes that perform specific tasks
 - **Topics** enable asynchronous publish-subscribe communication for streaming data
 - **Services** provide synchronous request-response for quick queries and configuration
 - **Actions** handle long-running tasks with feedback and cancellation support
 - **QoS policies** control message delivery guarantees
 
-:::tip Key Takeaway
-Choose the right communication pattern for your use case: Topics for continuous data, Services for quick queries, and Actions for long-running tasks that need feedback.
-:::
+<div className="key-takeaway">
 
-:::note Looking Ahead
-In the next chapter, we'll dive into Python ROS 2 integration with rclpy, learning how to bridge Python-based AI agents to ROS 2 robot controllers.
-:::
+Choose the right communication pattern for your use case: Topics for continuous data, Services for quick queries, and Actions for long-running tasks that need feedback.
+
+</div>
+
+<a href="/ros2/python-integration" className="next-chapter">
+  Next: Python ROS 2 Integration →
+</a>
+
+</div>
 
 ## Further Reading
 

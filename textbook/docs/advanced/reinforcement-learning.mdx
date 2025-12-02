@@ -24,6 +24,74 @@ By the end of this chapter, you will be able to:
 - Apply deep RL algorithms (DQN, PPO) to robotics tasks
 - Address sim-to-real transfer challenges
 
+## RL System Architecture for Robotics
+
+A complete RL system for robotics integrates simulation, training, and deployment:
+
+```mermaid
+graph TB
+    subgraph "Training Environment"
+        SIM[Simulator]
+        DR[Domain Randomization]
+        RG[Reward Generator]
+    end
+
+    subgraph "Learning System"
+        BUFF[Experience Buffer]
+        POL[Policy Network]
+        VAL[Value Network]
+        OPT[Optimizer]
+    end
+
+    subgraph "Deployment"
+        INF[Inference Engine]
+        SAFE[Safety Monitor]
+        ROBOT[Real Robot]
+    end
+
+    SIM --> BUFF
+    DR --> SIM
+    RG --> BUFF
+    BUFF --> OPT
+    OPT --> POL
+    OPT --> VAL
+    POL --> INF
+    INF --> SAFE
+    SAFE --> ROBOT
+    ROBOT --> INF
+```
+
+### RL Training Data Flow
+
+```mermaid
+flowchart LR
+    subgraph Collection
+        STATE[State]
+        ACTION[Action]
+        REWARD[Reward]
+        NEXT[Next State]
+    end
+
+    subgraph Storage
+        REPLAY[Replay Buffer]
+    end
+
+    subgraph Learning
+        SAMPLE[Batch Sampling]
+        LOSS[Loss Computation]
+        UPDATE[Gradient Update]
+    end
+
+    STATE --> REPLAY
+    ACTION --> REPLAY
+    REWARD --> REPLAY
+    NEXT --> REPLAY
+    REPLAY --> SAMPLE
+    SAMPLE --> LOSS
+    LOSS --> UPDATE
+    UPDATE --> POLICY[Updated Policy]
+```
+
 ## RL Fundamentals
 
 ```mermaid
@@ -312,9 +380,11 @@ Reinforcement learning provides a powerful framework for robots to learn complex
 - Sim-to-real transfer bridges the gap between simulation and reality
 - Safety considerations are critical for real-world deployment
 
-:::tip Key Takeaway
+<div className="key-takeaway">
+
 RL is powerful but sample-inefficient. Combine simulation training, imitation learning, and careful reward design for practical robotics applications.
-:::
+
+</div>
 
 ## Further Reading
 

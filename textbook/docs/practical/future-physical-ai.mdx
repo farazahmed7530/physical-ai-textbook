@@ -24,6 +24,89 @@ By the end of this chapter, you will be able to:
 - Evaluate societal implications of widespread robot adoption
 - Plan career paths in the robotics industry
 
+## Future Robotics System Architecture
+
+The next generation of robots will integrate foundation models with embodied systems:
+
+```mermaid
+graph TB
+    subgraph "Foundation Models"
+        LLM[Language Model]
+        VLM[Vision-Language Model]
+        WM[World Model]
+    end
+
+    subgraph "Embodiment Layer"
+        PERC[Perception]
+        PLAN[Planning]
+        CTRL[Control]
+    end
+
+    subgraph "Physical Layer"
+        SENS[Sensors]
+        ACT[Actuators]
+        BODY[Robot Body]
+    end
+
+    subgraph "Learning Layer"
+        SIM[Simulation]
+        DEMO[Demonstrations]
+        EXP[Experience]
+    end
+
+    LLM --> PLAN
+    VLM --> PERC
+    WM --> PLAN
+    PERC --> PLAN
+    PLAN --> CTRL
+    CTRL --> ACT
+    SENS --> PERC
+    ACT --> BODY
+    SIM --> WM
+    DEMO --> LLM
+    EXP --> WM
+```
+
+### Future AI-Robot Data Flow
+
+```mermaid
+flowchart LR
+    subgraph Input
+        LANG[Natural Language]
+        VIS[Visual Scene]
+        PROP[Proprioception]
+    end
+
+    subgraph Understanding
+        GROUND[Grounding]
+        REASON[Reasoning]
+        PREDICT[Prediction]
+    end
+
+    subgraph Action
+        TASK[Task Plan]
+        MOTION[Motion Plan]
+        EXEC[Execution]
+    end
+
+    subgraph Learning
+        FEEDBACK[Feedback]
+        ADAPT[Adaptation]
+    end
+
+    LANG --> GROUND
+    VIS --> GROUND
+    PROP --> REASON
+    GROUND --> REASON
+    REASON --> PREDICT
+    PREDICT --> TASK
+    TASK --> MOTION
+    MOTION --> EXEC
+    EXEC --> FEEDBACK
+    FEEDBACK --> ADAPT
+    ADAPT --> REASON
+```
+
 ## Emerging Technologies
 
 ### Foundation Models for Robotics

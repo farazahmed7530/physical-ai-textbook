@@ -63,9 +63,11 @@ graph TB
 | **Isaac Lab** | RL training environment | GPU-parallel envs, curriculum |
 | **Jetson** | Edge deployment | Orin, Xavier, optimized inference |
 
-:::tip Why Isaac for Humanoids?
+<div className="key-takeaway">
+
 Isaac provides the complete pipeline: simulate humanoids in photorealistic environments, generate unlimited training data, train with GPU-accelerated RL, and deploy to Jetson edge devices.
-:::
+
+</div>
 
 ## Isaac Sim: Photorealistic Simulation
 
@@ -647,6 +649,36 @@ def generate_launch_description():
     ])
 ```
 
+<div className="hands-on-exercise">
+
+#### Exercise: Verify Your Isaac Sim Installation
+
+Before diving into complex simulations, let's verify Isaac Sim is working correctly.
+
+**Step 1:** Launch Isaac Sim:
+```bash
+cd ~/isaac_sim-2023.1.1
+./isaac-sim.sh
+```
+
+**Step 2:** Once loaded, open the Script Editor (Window → Script Editor) and run:
+```python
+from omni.isaac.core import World
+world = World()
+world.scene.add_default_ground_plane()
+print("Isaac Sim is working!")
+```
+
+**Step 3:** Press Play (▶️) to start the simulation. You should see a ground plane.
+
+<div className="expected-output">
+Isaac Sim is working!
+[Info] Physics scene created
+[Info] Ground plane added to scene
+</div>
+
+</div>
+
 ## Practical Exercise: Humanoid in Isaac Sim
 
 Let's create a complete humanoid simulation with perception and control.
@@ -795,18 +827,25 @@ class HumanoidController:
         self.set_joint_positions(wave_pose)
 ```
 
-## Summary
+<div className="chapter-summary">
 
-In this chapter, you learned about the NVIDIA Isaac ecosystem:
-
+**What you learned:**
 - **Isaac Sim**: Photorealistic simulation built on Omniverse with PhysX 5 and RTX rendering
 - **Synthetic Data**: Using Replicator for domain randomization and unlimited training data
 - **Isaac SDK**: Building GPU-accelerated robot applications with GEMs
 - **ROS 2 Integration**: Seamless bridge between Isaac Sim and ROS 2
 
-:::tip Key Takeaway
+<div className="key-takeaway">
+
 Isaac Sim's photorealistic rendering and synthetic data generation capabilities make it ideal for training perception models that transfer to the real world. Combined with GPU-accelerated physics, you can simulate thousands of humanoid robots in parallel.
-:::
+
+</div>
+
+<a href="/isaac/perception" className="next-chapter">
+  Next: AI-Powered Perception with Isaac ROS →
+</a>
+
+</div>
 
 ## Further Reading
 

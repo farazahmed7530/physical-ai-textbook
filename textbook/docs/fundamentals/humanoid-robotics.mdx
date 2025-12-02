@@ -59,6 +59,91 @@ graph TB
     end
 ```
 
+### Humanoid System Architecture
+
+The following diagram shows how the major subsystems of a humanoid robot interact:
+
+```mermaid
+graph TB
+    subgraph "Perception Layer"
+        V[Vision System]
+        AU[Audio System]
+        P[Proprioception]
+    end
+
+    subgraph "Cognition Layer"
+        WM[World Model]
+        TP[Task Planner]
+        MP[Motion Planner]
+    end
+
+    subgraph "Control Layer"
+        BC[Balance Controller]
+        JC[Joint Controllers]
+        GC[Gripper Controller]
+    end
+
+    subgraph "Hardware Layer"
+        S[Sensors]
+        A[Actuators]
+        PS[Power System]
+    end
+
+    V --> WM
+    AU --> WM
+    P --> WM
+    WM --> TP
+    TP --> MP
+    MP --> BC
+    BC --> JC
+    JC --> A
+    MP --> GC
+    GC --> A
+    S --> V
+    S --> AU
+    S --> P
+    PS --> A
+```
+
+### Data Flow in Humanoid Systems
+
+```mermaid
+flowchart LR
+    subgraph Input
+        CAM[Cameras]
+        MIC[Microphones]
+        ENC[Encoders]
+        IMU[IMU]
+        FT[Force/Torque]
+    end
+
+    subgraph Processing
+        PERC[Perception]
+        STATE[State Estimation]
+        PLAN[Planning]
+        CTRL[Control]
+    end
+
+    subgraph Output
+        MOT[Motors]
+        SPK[Speakers]
+        DISP[Display]
+    end
+
+    CAM --> PERC
+    MIC --> PERC
+    ENC --> STATE
+    IMU --> STATE
+    FT --> STATE
+    PERC --> PLAN
+    STATE --> PLAN
+    STATE --> CTRL
+    PLAN --> CTRL
+    CTRL --> MOT
+    PLAN --> SPK
+    PLAN --> DISP
+```
+
 ## Degrees of Freedom (DoF)
 
 A typical humanoid robot has 20-50 degrees of freedom:
@@ -223,9 +308,11 @@ Understanding humanoid robot fundamentals provides the foundation for more advan
 - Balance requires sophisticated control of the Zero Moment Point
 - Power management is critical for practical operation
 
-:::tip Key Takeaway
+<div className="key-takeaway">
+
 The humanoid form factor is chosen not for aesthetics, but for practical compatibility with human-designed environments, tools, and interaction patterns.
-:::
+
+</div>
 
 ## Further Reading
 

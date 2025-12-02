@@ -217,3 +217,352 @@ table th {
   background-color: var(--ifm-color-primary);
   color: white;
 }
+
+/* ============================================
+   Educative-Style Course Components
+   Requirements: 1.5, 2.2, 11.1-11.4
+   ============================================ */
+
+/* Key Takeaway Box - Blue highlight box for critical insights */
+.key-takeaway {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-left: 4px solid #1976d2;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+  position: relative;
+}
+
+[data-theme='dark'] .key-takeaway {
+  background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+  border-left-color: #64b5f6;
+}
+
+.key-takeaway::before {
+  content: '💡 Key Takeaway';
+  display: block;
+  font-weight: 700;
+  color: #1565c0;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+[data-theme='dark'] .key-takeaway::before {
+  color: #90caf9;
+}
+
+.key-takeaway p {
+  margin: 0;
+  color: #0d47a1;
+}
+
+[data-theme='dark'] .key-takeaway p {
+  color: #e3f2fd;
+}
+
+/* Hands-on Exercise Box */
+.hands-on-exercise {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border: 2px solid #4caf50;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+}
+
+[data-theme='dark'] .hands-on-exercise {
+  background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+  border-color: #81c784;
+}
+
+.hands-on-exercise::before {
+  content: '🛠️ Hands-on Exercise';
+  display: block;
+  font-weight: 700;
+  color: #2e7d32;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+[data-theme='dark'] .hands-on-exercise::before {
+  color: #a5d6a7;
+}
+
+.hands-on-exercise h4 {
+  color: #1b5e20;
+  margin-top: 0;
+}
+
+[data-theme='dark'] .hands-on-exercise h4 {
+  color: #c8e6c9;
+}
+
+.hands-on-exercise ol,
+.hands-on-exercise ul {
+  margin-bottom: 0;
+}
+
+/* Expected Output Box */
+.expected-output {
+  background-color: #263238;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-top: 1rem;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.9rem;
+  color: #b0bec5;
+  overflow-x: auto;
+}
+
+.expected-output::before {
+  content: 'Expected Output:';
+  display: block;
+  color: #78909c;
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+  font-family: var(--ifm-font-family-base);
+}
+
+/* Knowledge Check / Quiz Section */
+.knowledge-check {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border: 2px solid #ff9800;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+}
+
+[data-theme='dark'] .knowledge-check {
+  background: linear-gradient(135deg, #e65100 0%, #f57c00 100%);
+  border-color: #ffb74d;
+}
+
+.knowledge-check::before {
+  content: '✅ Knowledge Check';
+  display: block;
+  font-weight: 700;
+  color: #e65100;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+[data-theme='dark'] .knowledge-check::before {
+  color: #ffe0b2;
+}
+
+.knowledge-check .question {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+[data-theme='dark'] .knowledge-check .question {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.knowledge-check .question-number {
+  font-weight: 700;
+  color: #e65100;
+  margin-right: 0.5rem;
+}
+
+[data-theme='dark'] .knowledge-check .question-number {
+  color: #ffcc80;
+}
+
+.knowledge-check .options {
+  margin-top: 0.75rem;
+  padding-left: 1.5rem;
+}
+
+.knowledge-check .options label {
+  display: block;
+  padding: 0.5rem;
+  margin: 0.25rem 0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.knowledge-check .options label:hover {
+  background: rgba(255, 152, 0, 0.2);
+}
+
+/* Chapter Summary Box */
+.chapter-summary {
+  background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+}
+
+[data-theme='dark'] .chapter-summary {
+  background: linear-gradient(135deg, #4a148c 0%, #6a1b9a 100%);
+}
+
+.chapter-summary::before {
+  content: '📋 Chapter Summary';
+  display: block;
+  font-weight: 700;
+  color: #7b1fa2;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+[data-theme='dark'] .chapter-summary::before {
+  color: #ce93d8;
+}
+
+.chapter-summary ul {
+  margin-bottom: 1rem;
+}
+
+.chapter-summary .next-chapter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: #7b1fa2;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.chapter-summary .next-chapter:hover {
+  background: #9c27b0;
+  color: white;
+  text-decoration: none;
+}
+
+[data-theme='dark'] .chapter-summary .next-chapter {
+  background: #9c27b0;
+}
+
+[data-theme='dark'] .chapter-summary .next-chapter:hover {
+  background: #ab47bc;
+}
+
+/* Learning Objectives Box */
+.learning-objectives {
+  background: linear-gradient(135deg, #e8eaf6 0%, #c5cae9 100%);
+  border-left: 4px solid #3f51b5;
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  margin: 1.5rem 0;
+}
+
+[data-theme='dark'] .learning-objectives {
+  background: linear-gradient(135deg, #1a237e 0%, #303f9f 100%);
+  border-left-color: #7986cb;
+}
+
+.learning-objectives::before {
+  content: '🎯 Learning Objectives';
+  display: block;
+  font-weight: 700;
+  color: #303f9f;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+[data-theme='dark'] .learning-objectives::before {
+  color: #9fa8da;
+}
+
+.learning-objectives ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.learning-objectives li {
+  margin-bottom: 0.5rem;
+}
+
+/* Comparison Table Styling */
+.comparison-table {
+  margin: 1.5rem 0;
+  overflow-x: auto;
+}
+
+.comparison-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.comparison-table th {
+  background: linear-gradient(135deg, var(--ifm-color-primary) 0%, var(--ifm-color-primary-dark) 100%);
+  color: white;
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+
+.comparison-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-300);
+}
+
+.comparison-table tr:nth-child(even) {
+  background-color: var(--ifm-color-emphasis-100);
+}
+
+/* Time Estimate Badge */
+.time-estimate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: var(--ifm-color-emphasis-200);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  color: var(--ifm-color-emphasis-700);
+  margin-right: 0.5rem;
+}
+
+.time-estimate::before {
+  content: '⏱️';
+}
+
+/* Difficulty Badge */
+.difficulty-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.difficulty-badge.beginner {
+  background: #c8e6c9;
+  color: #2e7d32;
+}
+
+.difficulty-badge.intermediate {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.difficulty-badge.advanced {
+  background: #ffcdd2;
+  color: #c62828;
+}
+
+[data-theme='dark'] .difficulty-badge.beginner {
+  background: #1b5e20;
+  color: #a5d6a7;
+}
+
+[data-theme='dark'] .difficulty-badge.intermediate {
+  background: #e65100;
+  color: #ffe0b2;
+}
+
+[data-theme='dark'] .difficulty-badge.advanced {
+  background: #b71c1c;
+  color: #ffcdd2;
+}

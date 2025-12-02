@@ -48,17 +48,34 @@ graph TB
 ```
 
 
+### URDF vs SDF: Complete Comparison
+
 | Feature | URDF | SDF |
 |---------|------|-----|
 | **Primary Use** | ROS robot description | Gazebo simulation |
-| **Scope** | Single robot | Worlds + multiple robots |
-| **Loops** | Not supported | Supported |
-| **Sensors** | Basic | Comprehensive |
-| **Physics** | Limited | Full configuration |
+| **Scope** | Single robot only | Worlds + multiple robots + lights |
+| **Kinematic Loops** | Not supported (tree only) | Fully supported |
+| **Sensors** | Basic (via Gazebo tags) | Comprehensive native support |
+| **Physics Config** | Limited | Full engine configuration |
 | **File Extension** | `.urdf`, `.xacro` | `.sdf`, `.world` |
+| **Macros/Templates** | Via Xacro | Via ERB or custom tools |
+| **Surface Properties** | Basic friction | Full contact/friction/bounce |
+| **Lighting** | Not supported | Full light definitions |
+| **Plugins** | Via `<gazebo>` tags | Native plugin support |
+| **Model Composition** | Include via Xacro | Native `<include>` tag |
+| **Pose Specification** | `<origin xyz rpy>` | `<pose>x y z roll pitch yaw</pose>` |
+| **ROS Integration** | Native | Via ros_gz_bridge |
 
-:::tip Best Practice
-Use URDF with Xacro for your robot model (ROS compatibility), then let Gazebo automatically convert it to SDF for simulation. This gives you the best of both worlds.
+<div className="key-takeaway">
+
+**Best Practice:** Use URDF with Xacro for your robot model (ensures ROS compatibility with robot_state_publisher, MoveIt, etc.), then add Gazebo-specific features using `<gazebo>` tags. Gazebo automatically converts URDF to SDF internally.
+
+</div>
+
+:::tip When to Use Each Format
+- **URDF**: When you need ROS tools (TF, MoveIt, RViz visualization)
+- **SDF**: When building simulation worlds, adding multiple robots, or need advanced physics
+- **Both**: Most projects use URDF for the robot + SDF for the world environment
 :::
 
 ## URDF Fundamentals
@@ -759,6 +776,60 @@ Let's build a complete humanoid torso with arms using Xacro:
 ```
 
 
+<div className="hands-on-exercise">
+
+#### Exercise: Create a Simple URDF Robot Arm
+
+In this exercise, you'll create a basic 2-link robot arm URDF from scratch.
+
+**Step 1:** Create a file called `simple_arm.urdf`:
+```xml
+<?xml version="1.0"?>
+<robot name="simple_arm">
+  <link name="base_link">
+    <visual>
+      <geometry><cylinder radius="0.1" length="0.05"/></geometry>
+      <material name="gray"><color rgba="0.5 0.5 0.5 1"/></material>
+    </visual>
+  </link>
+
+  <link name="link1">
+    <visual>
+      <origin xyz="0 0 0.15"/>
+      <geometry><cylinder radius="0.04" length="0.3"/></geometry>
+      <material name="blue"><color rgba="0.2 0.2 0.8 1"/></material>
+    </visual>
+  </link>
+
+  <joint name="joint1" type="revolute">
+    <parent link="base_link"/>
+    <child link="link1"/>
+    <origin xyz="0 0 0.025"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57" effort="10" velocity="1"/>
+  </joint>
+</robot>
+```
+
+**Step 2:** Validate the URDF:
+```bash
+check_urdf simple_arm.urdf
+```
+
+**Step 3:** Visualize in RViz:
+```bash
+ros2 launch urdf_tutorial display.launch.py model:=simple_arm.urdf
+```
+
+<div className="expected-output">
+robot name is: simple_arm
+---------- Successfully Parsed XML ---------------
+root Link: base_link has 1 child(ren)
+    child(1):  link1
+</div>
+
+</div>
+
 ## Visualizing Robot Models
 
 ### Using RViz
@@ -852,9 +923,11 @@ In this chapter, you learned:
 - **Joint types** define how links can move relative to each other
 - **Inertia properties** are critical for stable physics simulation
 
-:::tip Key Takeaway
+<div className="key-takeaway">
+
 Start with URDF/Xacro for ROS compatibility, add Gazebo extensions for simulation features. Use simplified collision geometry and accurate inertia values for stable simulation.
-:::
+
+</div>
 
 :::note Looking Ahead
 In the next chapter, we'll add sensors to our robot model—cameras, LiDAR, and IMUs—learning how to simulate the perception systems that give humanoid robots awareness of their environment.

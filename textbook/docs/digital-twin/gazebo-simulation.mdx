@@ -13,7 +13,17 @@ import { ChapterTranslateButton } from '@site/src/components/TranslationControls
 
 # Gazebo Simulation Environment
 
-Welcome to the world of robot simulation! Gazebo is a powerful physics simulation environment that allows you to test robot behaviors in a virtual world before deploying to real hardware. In this chapter, you'll learn how to set up Gazebo, understand its physics engine, and create realistic simulation environments for humanoid robots.
+> **Estimated Time:** 75 minutes | **Difficulty:** Intermediate | **Hands-on:** Yes
+
+Welcome to the world of robot simulation! Gazebo is a powerful physics simulation environment that allows you to test robot behaviors in a virtual world before deploying to real hardware.
+
+:::info What You'll Build
+By the end of this chapter, you'll have a working Gazebo simulation with a robot that responds to commands—your own digital twin for safe experimentation.
+:::
+
+:::caution Important
+This chapter includes the **Interactive 3D Robot Playground**. Make sure you complete the hands-on exercises to get the most out of this module.
+:::
 
 ## Learning Objectives
 
@@ -56,8 +66,41 @@ graph LR
 | **Reproducibility** | Exact same conditions for every test |
 | **Accessibility** | Develop without physical robot access |
 
-:::tip Why Humanoids Need Simulation
+<div className="key-takeaway">
+
 Humanoid robots are expensive and can be damaged by falls. Simulation lets you test balance algorithms, walking gaits, and manipulation tasks safely before real-world deployment.
+
+</div>
+
+### Simulation vs Real World: The Reality Gap
+
+One of the biggest challenges in robotics is the "reality gap"—the difference between how robots behave in simulation versus the real world. Understanding this gap is essential for successful sim-to-real transfer.
+
+| Aspect | Simulation | Real World |
+|--------|------------|------------|
+| **Physics** | Idealized, deterministic | Complex, stochastic |
+| **Sensors** | Perfect, noise-free | Noisy, calibration drift |
+| **Actuators** | Instant response | Delays, backlash, wear |
+| **Environment** | Fully known | Partially observable |
+| **Collisions** | Clean contact models | Deformation, friction variation |
+| **Lighting** | Controlled | Variable, shadows, reflections |
+| **Reset** | Instant, unlimited | No reset possible |
+| **Time** | Can speed up/slow down | Fixed real-time |
+| **Failure** | No consequences | Hardware damage, safety risks |
+| **Cost per Trial** | Near zero | Expensive (time, wear, risk) |
+
+<div className="key-takeaway">
+
+**Bridging the Gap:** The key to successful sim-to-real transfer is domain randomization—training your robot across many variations of physics parameters, sensor noise, and environmental conditions so it learns robust behaviors that transfer to the real world.
+
+</div>
+
+:::caution The Reality Gap Warning
+A policy that achieves 100% success in simulation may fail completely in the real world. Always:
+1. Add realistic sensor noise to your simulation
+2. Randomize physics parameters (friction, mass, delays)
+3. Test with domain randomization before real deployment
+4. Start with conservative, safe behaviors on real hardware
 :::
 
 ## Gazebo Overview
@@ -668,6 +711,35 @@ gz log playback --path /tmp/sim_log
 ros2 bag record -a -o simulation_data
 ```
 
+<div className="hands-on-exercise">
+
+#### Exercise: Launch Your First Gazebo Simulation
+
+In this exercise, you'll launch Gazebo and spawn a simple robot model.
+
+**Step 1:** Launch an empty Gazebo world:
+```bash
+gz sim empty.sdf
+```
+
+**Step 2:** In another terminal, spawn a simple shape:
+```bash
+gz service -s /world/empty/create \
+  --reqtype gz.msgs.EntityFactory \
+  --reptype gz.msgs.Boolean \
+  --timeout 1000 \
+  --req 'sdf: "<model name=\"box\"><pose>0 0 0.5 0 0 0</pose><link name=\"link\"><collision name=\"collision\"><geometry><box><size>1 1 1</size></box></geometry></collision><visual name=\"visual\"><geometry><box><size>1 1 1</size></box></geometry></visual></link></model>"'
+```
+
+**Step 3:** Observe the box falling due to gravity in the simulation.
+
+<div className="expected-output">
+A 1x1x1 meter box appears at height 0.5m and falls to the ground plane.
+The box settles on the ground after bouncing slightly.
+</div>
+
+</div>
+
 ## Practical Exercise: Humanoid Lab Setup
 
 Let's create a complete simulation environment for humanoid robot testing.
@@ -827,23 +899,78 @@ source install/setup.bash
 ros2 launch humanoid_simulation humanoid_lab.launch.py
 ```
 
-## Summary
+<div className="knowledge-check">
 
-In this chapter, you learned the fundamentals of Gazebo simulation:
+<div className="question">
+<span className="question-number">Q1.</span> What is the default direction of gravity in Gazebo?
+<div className="options">
 
+- A) Positive X
+- B) Negative Y
+- C) Negative Z ✓
+- D) Positive Z
+
+</div>
+</div>
+
+<div className="question">
+<span className="question-number">Q2.</span> Which physics engine is recommended for humanoid robot simulation?
+<div className="options">
+
+- A) ODE
+- B) Bullet
+- C) DART ✓
+- D) TPE
+
+</div>
+</div>
+
+<div className="question">
+<span className="question-number">Q3.</span> What is the purpose of the `ros_gz_bridge` package?
+<div className="options">
+
+- A) To render graphics
+- B) To connect Gazebo topics to ROS 2 topics ✓
+- C) To compile URDF files
+- D) To control robot joints
+
+</div>
+</div>
+
+<div className="question">
+<span className="question-number">Q4.</span> What timestep should you use for accurate physics simulation?
+<div className="options">
+
+- A) 0.1 seconds
+- B) 0.01 seconds
+- C) 0.001 seconds (1ms) ✓
+- D) 1 second
+
+</div>
+</div>
+
+</div>
+
+<div className="chapter-summary">
+
+**What you learned:**
 - **Physics Simulation**: How Gazebo models gravity, collisions, and forces
 - **World Creation**: Building simulation environments with SDF files
 - **Robot Spawning**: Loading robots into Gazebo via ROS 2
 - **Physics Tuning**: Configuring engines for accuracy vs performance
 - **ROS 2 Bridge**: Connecting Gazebo and ROS 2 topics
 
-:::tip Key Takeaway
-Simulation is essential for safe, fast, and cost-effective robot development. Master Gazebo to iterate quickly on your humanoid robot algorithms before real-world deployment.
-:::
+<div className="key-takeaway">
 
-:::note Looking Ahead
-In the next chapter, we'll dive deeper into robot description formats—URDF and SDF—learning how to model complex humanoid robots with joints, sensors, and visual elements.
-:::
+Simulation is essential for safe, fast, and cost-effective robot development. Master Gazebo to iterate quickly on your humanoid robot algorithms before real-world deployment.
+
+</div>
+
+<a href="/digital-twin/robot-description-formats" className="next-chapter">
+  Next: Robot Description Formats (URDF & SDF) →
+</a>
+
+</div>
 
 ## Further Reading
 

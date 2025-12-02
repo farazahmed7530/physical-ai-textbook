@@ -24,6 +24,78 @@ By the end of this chapter, you will be able to:
 - Understand the challenges of deploying robots in real-world settings
 - Recognize emerging opportunities in robotics markets
 
+## Industrial Robotics System Architecture
+
+Modern industrial robotics systems integrate multiple layers:
+
+```mermaid
+graph TB
+    subgraph "Enterprise Layer"
+        ERP[ERP System]
+        MES[Manufacturing Execution]
+        PLM[Product Lifecycle]
+    end
+
+    subgraph "Control Layer"
+        PLC[PLC Controllers]
+        RC[Robot Controllers]
+        SCADA[SCADA System]
+    end
+
+    subgraph "Field Layer"
+        ROBOTS[Industrial Robots]
+        SENSORS[Sensors]
+        CONVEY[Conveyors]
+        TOOLS[End Effectors]
+    end
+
+    ERP --> MES
+    PLM --> MES
+    MES --> PLC
+    MES --> RC
+    PLC --> SCADA
+    RC --> SCADA
+    PLC --> CONVEY
+    RC --> ROBOTS
+    SENSORS --> PLC
+    TOOLS --> ROBOTS
+```
+
+### Industrial Data Flow
+
+```mermaid
+flowchart LR
+    subgraph Orders
+        ORD[Customer Order]
+        BOM[Bill of Materials]
+    end
+
+    subgraph Planning
+        SCHED[Scheduling]
+        ALLOC[Resource Allocation]
+    end
+
+    subgraph Execution
+        TASK[Task Assignment]
+        ROBOT[Robot Execution]
+        QC[Quality Control]
+    end
+
+    subgraph Feedback
+        STATUS[Status Update]
+        METRICS[Performance Metrics]
+    end
+
+    ORD --> SCHED
+    BOM --> SCHED
+    SCHED --> ALLOC
+    ALLOC --> TASK
+    TASK --> ROBOT
+    ROBOT --> QC
+    QC --> STATUS
+    ROBOT --> METRICS
+```
+
 ## Manufacturing
 
 ### Assembly Line Robots
@@ -412,9 +484,11 @@ Physical AI is revolutionizing industries by augmenting human capabilities and e
 - Service robots are emerging in retail, hospitality, and food service
 - ROI analysis is essential for deployment decisions
 
-:::tip Key Takeaway
+<div className="key-takeaway">
+
 Successful robotics deployments focus on augmenting human workers rather than replacing them entirely, creating human-robot teams that leverage the strengths of both.
-:::
+
+</div>
 
 ## Further Reading
 

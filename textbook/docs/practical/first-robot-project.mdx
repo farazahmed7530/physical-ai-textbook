@@ -40,6 +40,76 @@ graph TB
     E --> F[Integration & Testing]
 ```
 
+### Robot System Architecture
+
+```mermaid
+graph TB
+    subgraph "Hardware Layer"
+        SENS[Sensors]
+        MOT[Motors]
+        PWR[Power]
+        COMP[Computer]
+    end
+
+    subgraph "Driver Layer"
+        SDRV[Sensor Drivers]
+        MDRV[Motor Drivers]
+        GPIO[GPIO Interface]
+    end
+
+    subgraph "Application Layer"
+        PERC[Perception]
+        NAV[Navigation]
+        VOICE[Voice Control]
+        MAIN[Main Controller]
+    end
+
+    SENS --> SDRV
+    MOT --> MDRV
+    PWR --> COMP
+    SDRV --> PERC
+    MDRV --> NAV
+    GPIO --> SDRV
+    GPIO --> MDRV
+    PERC --> MAIN
+    NAV --> MAIN
+    VOICE --> MAIN
+```
+
+### Data Flow Overview
+
+```mermaid
+flowchart LR
+    subgraph Input
+        US[Ultrasonic]
+        CAM[Camera]
+        MIC[Microphone]
+    end
+
+    subgraph Processing
+        DIST[Distance Calc]
+        OBJ[Object Detection]
+        ASR[Speech Recognition]
+        DECIDE[Decision Logic]
+    end
+
+    subgraph Output
+        LEFT[Left Motor]
+        RIGHT[Right Motor]
+        SPK[Speaker]
+    end
+
+    US --> DIST
+    CAM --> OBJ
+    MIC --> ASR
+    DIST --> DECIDE
+    OBJ --> DECIDE
+    ASR --> DECIDE
+    DECIDE --> LEFT
+    DECIDE --> RIGHT
+    DECIDE --> SPK
+```
+
 ## Hardware Selection
 
 ### Essential Components
@@ -481,9 +551,11 @@ Building a robot project integrates hardware, software, and systems thinking. Ke
 - Implement safety features from the beginning
 - Iterate and improve based on real-world testing
 
-:::tip Key Takeaway
+<div className="key-takeaway">
+
 The best robot projects start simple and grow incrementally. Get basic functionality working first, then add complexity.
-:::
+
+</div>
 
 ## Further Reading
 

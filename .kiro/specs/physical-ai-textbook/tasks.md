@@ -2,6 +2,96 @@
 
 > **Note:** Use Context7 MCP server to fetch latest documentation for all technologies.
 
+## Phase 0: Educative-Style Content Restructuring
+
+> **Goal:** Transform the textbook into Educative-style course format for potential sale to Educative platform.
+
+- [ ] 31. Create Course Introduction Section (Educative Style)
+  - [x] 31.1 Create "What is Physical AI System Design?" intro page
+    - Add engaging hook with real-world scenario (like clinic AI example)
+    - Explain why Physical AI matters now
+    - Cover the transition from digital AI to embodied systems
+    - _Requirements: 3.1, 3.2_
+  - [x] 31.2 Create "Who is this course for?" section
+    - Target audiences: Robotics engineers, AI/ML engineers, Backend developers, Product managers, Interview candidates
+    - Explain what each audience will gain
+    - _Requirements: 2.1_
+  - [x] 31.3 Create "Prerequisites" section
+    - List: Python programming, Basic ML concepts, Linux familiarity
+    - Link to recommended prerequisite courses
+    - Add "No need to stop and learn separately" encouragement
+    - _Requirements: 2.1_
+  - [x] 31.4 Create "Course Expectations" section
+    - What you'll learn (mental models, system-level thinking)
+    - Real-world case studies approach
+    - Hands-on projects
+    - _Requirements: 2.1, 10.1_
+  - [x] 31.5 Create "Course Structure" overview page
+    - Visual roadmap of all modules
+    - Time estimates per module
+    - Learning path diagram
+    - _Requirements: 2.1, 2.3_
+
+- [x] 32. Restructure Each Module with Educative Patterns
+  - [x] 32.1 Add "Learning Objectives" to start of each chapter
+    - Clear, measurable outcomes
+    - Bullet points with action verbs
+    - _Requirements: 12.1-12.6_
+  - [x] 32.2 Add "Key Takeaways" boxes throughout chapters
+    - Highlight critical insights
+    - Use consistent styling (like Educative's blue boxes)
+    - _Requirements: 2.2_
+  - [x] 32.3 Add "Hands-on Exercise" sections
+    - Interactive code examples
+    - Step-by-step instructions
+    - Expected outputs
+    - _Requirements: 2.2, 4.5_
+  - [x] 32.4 Add "Knowledge Check" quizzes at chapter ends
+    - Multiple choice questions
+    - Code completion exercises
+    - _Requirements: 11.1-11.4_
+  - [x] 32.5 Add "Summary" sections at chapter ends
+    - Bullet point recap
+    - Links to next chapter
+    - _Requirements: 2.3_
+
+- [x] 33. Create Comparison Tables (Educative Style)
+  - [x] 33.1 Add "Digital AI vs Physical AI" comparison table
+    - Keep existing diagram, add structured table
+    - _Requirements: 3.1, 3.2_
+  - [x] 33.2 Add "Simulation vs Real World" comparison table
+    - Cover the reality gap
+    - _Requirements: 5.1, 6.5_
+  - [x] 33.3 Add "ROS 1 vs ROS 2" comparison table
+    - _Requirements: 4.1_
+  - [x] 33.4 Add "URDF vs SDF" comparison table
+    - _Requirements: 5.3_
+
+- [x] 34. Enhance Visual Learning Elements
+  - [x] 34.1 Keep all existing Mermaid diagrams
+    - Do NOT remove any diagrams
+    - _Requirements: 2.4_
+  - [x] 34.2 Add architecture diagrams for each module
+    - System overview diagrams
+    - Data flow diagrams
+    - _Requirements: 2.2_
+  - [x] 34.3 Keep 3D Robot Playground (Chapter 5 simulation)
+    - Do NOT remove interactive elements
+    - _Requirements: 28.1-29.3_
+
+- [x] 35. Create Real-World Case Studies
+  - [x] 35.1 Add "Building a Warehouse Robot" case study
+    - Apply ROS 2, navigation, perception concepts
+    - _Requirements: 4.1-4.6, 6.3_
+  - [x] 35.2 Add "Humanoid Assistant" case study
+    - Apply HRI, VLA, conversational AI concepts
+    - _Requirements: 7.4, 8.1-8.5_
+  - [x] 35.3 Add "Sim-to-Real Transfer" case study
+    - Apply Isaac, domain randomization concepts
+    - _Requirements: 6.5_
+
+- [x] 36. Checkpoint - Review Educative-style restructuring
+
 ## Phase 1: Project Setup and Core Infrastructure
 
 - [x] 1. Initialize Docusaurus project and configure for GitHub Pages

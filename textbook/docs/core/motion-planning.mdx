@@ -24,6 +24,58 @@ By the end of this chapter, you will be able to:
 - Design trajectory profiles with velocity and acceleration constraints
 - Implement PID and understand Model Predictive Control concepts
 
+## Motion Planning System Architecture
+
+The motion planning system integrates perception, planning, and control:
+
+```mermaid
+graph TB
+    subgraph "Perception"
+        ENV[Environment Sensing]
+        LOC[Localization]
+        OBS[Obstacle Detection]
+    end
+
+    subgraph "Planning"
+        GP[Global Planner]
+        LP[Local Planner]
+        TP[Trajectory Planner]
+    end
+
+    subgraph "Control"
+        TC[Trajectory Controller]
+        JC[Joint Controller]
+        SC[Safety Controller]
+    end
+
+    ENV --> OBS
+    LOC --> GP
+    OBS --> GP
+    OBS --> LP
+    GP --> LP
+    LP --> TP
+    TP --> TC
+    TC --> JC
+    SC --> JC
+    JC --> ROBOT[Robot Hardware]
+```
+
+### Motion Planning Data Flow
+
+```mermaid
+flowchart LR
+    GOAL[Goal Pose] --> GPLAN[Global Path]
+    MAP[Environment Map] --> GPLAN
+    GPLAN --> LPLAN[Local Path]
+    SENSORS[Sensor Data] --> LPLAN
+    LPLAN --> TRAJ[Trajectory]
+    CONSTRAINTS[Constraints] --> TRAJ
+    TRAJ --> CMD[Motor Commands]
+    CMD --> EXEC[Execution]
+    EXEC --> FB[Feedback]
+    FB --> LPLAN
+```
+
 ## Configuration Space
 
 The configuration space (C-space) represents all possible robot configurations:
@@ -263,9 +315,11 @@ Motion planning and control form the foundation for robot movement, combining ge
 - Trajectory planning adds time and dynamics to paths
 - PID control is fundamental; MPC handles constraints explicitly
 
-:::tip Key Takeaway
+<div className="key-takeaway">
+
 The choice of planning algorithm depends on the problem: use A* for low-dimensional discrete spaces, RRT for high-dimensional continuous spaces, and MPC when dynamics and constraints matter.
-:::
+
+</div>
 
 ## Further Reading
 

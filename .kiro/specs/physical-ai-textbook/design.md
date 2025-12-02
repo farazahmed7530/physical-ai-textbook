@@ -48,6 +48,28 @@ graph TB
 
 ## Content Structure
 
+### Educative-Style Course Format
+
+Following Educative's proven course structure pattern:
+
+```
+Course Introduction
+├── What is Physical AI System Design? (Hook + Problem Statement)
+├── Who is this course for? (Target Audiences)
+├── Prerequisites (Required Knowledge)
+├── Course Expectations (Learning Outcomes)
+└── Course Structure (Visual Roadmap)
+
+Each Chapter
+├── Learning Objectives (Measurable outcomes)
+├── Content with Key Takeaway boxes
+├── Comparison Tables (where applicable)
+├── Code Examples with explanations
+├── Hands-on Exercises
+├── Knowledge Check (optional quizzes)
+└── Summary + Next Chapter link
+```
+
 ### Module Organization (13 Weeks)
 
 | Module | Weeks | Focus | Key Topics |
@@ -59,8 +81,37 @@ graph TB
 | 4 | 11-12 | Humanoid Robot Development | Kinematics, bipedal locomotion, manipulation, grasping, HRI design |
 | 5 | 13 | VLA & Conversational Robotics | Whisper, GPT integration, LLM-to-ROS2 actions, multi-modal interaction |
 
+### Target Audiences (Educative Style)
+
+| Audience | What They'll Learn |
+|----------|-------------------|
+| **Robotics Engineers** | System-level thinking, sim-to-real transfer, production deployment |
+| **AI/ML Engineers** | Embodied AI, perception pipelines, reinforcement learning for control |
+| **Backend Developers** | ROS 2 architecture, real-time systems, hardware integration |
+| **Product Managers** | Technical feasibility, robotics constraints, project scoping |
+| **Interview Candidates** | Physical AI concepts, system design patterns, practical examples |
+
 ### Capstone Project: Autonomous Humanoid
 A simulated robot that: receives voice commands → plans path → navigates obstacles → identifies objects → manipulates objects.
+
+### Comparison Tables (Key Learning Elements)
+
+**Digital AI vs Physical AI:**
+| Aspect | Digital AI | Physical AI |
+|--------|-----------|-------------|
+| Environment | Virtual, controlled | Real, unpredictable |
+| Input | Clean data | Noisy sensor readings |
+| Output | Predictions, text | Physical movements |
+| Feedback | Immediate, precise | Delayed, uncertain |
+| Consequences | Reversible | Often irreversible |
+
+**Simulation vs Real World:**
+| Aspect | Simulation | Real World |
+|--------|------------|------------|
+| Physics | Idealized | Complex, noisy |
+| Sensors | Perfect | Noisy, calibration drift |
+| Deployment | Instant reset | No reset possible |
+| Safety | No consequences | Real harm possible |
 
 ## Components and Interfaces
 

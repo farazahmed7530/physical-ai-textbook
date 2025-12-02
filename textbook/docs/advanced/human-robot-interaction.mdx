@@ -24,6 +24,80 @@ By the end of this chapter, you will be able to:
 - Measure and build trust in human-robot systems
 - Evaluate HRI systems using appropriate metrics
 
+## HRI System Architecture
+
+A complete HRI system integrates perception, cognition, and interaction:
+
+```mermaid
+graph TB
+    subgraph "Human Perception"
+        FACE[Face Detection]
+        BODY[Body Tracking]
+        VOICE[Speech Recognition]
+        GEST[Gesture Recognition]
+    end
+
+    subgraph "Social Cognition"
+        INTENT[Intent Recognition]
+        EMO[Emotion Detection]
+        ATT[Attention Modeling]
+        TRUST[Trust Estimation]
+    end
+
+    subgraph "Interaction Generation"
+        SPEECH[Speech Synthesis]
+        MOTION[Social Motion]
+        GAZE[Gaze Control]
+        EXPR[Expression Control]
+    end
+
+    FACE --> ATT
+    BODY --> INTENT
+    VOICE --> INTENT
+    GEST --> INTENT
+    FACE --> EMO
+    VOICE --> EMO
+    INTENT --> TRUST
+    EMO --> TRUST
+    ATT --> GAZE
+    TRUST --> MOTION
+    INTENT --> SPEECH
+    EMO --> EXPR
+```
+
+### HRI Data Flow
+
+```mermaid
+flowchart LR
+    subgraph Input
+        HUM[Human Signals]
+        CTX[Context]
+        HIST[Interaction History]
+    end
+
+    subgraph Processing
+        PERC[Perception]
+        MODEL[User Model]
+        PLAN[Interaction Planner]
+    end
+
+    subgraph Output
+        ACT[Robot Actions]
+        COMM[Communication]
+        FB[Feedback]
+    end
+
+    HUM --> PERC
+    CTX --> MODEL
+    HIST --> MODEL
+    PERC --> MODEL
+    MODEL --> PLAN
+    PLAN --> ACT
+    PLAN --> COMM
+    ACT --> FB
+    FB --> HIST
+```
+
 ## Principles of HRI
 
 ### Design Considerations
@@ -368,9 +442,11 @@ Effective human-robot interaction requires careful attention to communication, s
 - Shared autonomy blends human and robot capabilities
 - Evaluation requires both objective metrics and subjective measures
 
-:::tip Key Takeaway
+<div className="key-takeaway">
+
 Successful HRI is not just about robot capability—it's about designing interactions that feel natural, safe, and trustworthy to humans.
-:::
+
+</div>
 
 ## Further Reading
 

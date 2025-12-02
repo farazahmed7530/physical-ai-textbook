@@ -90,6 +90,16 @@ const sidebars: SidebarsConfig = {
         "practical/future-physical-ai",
       ],
     },
+    {
+      type: "category",
+      label: "Real-World Case Studies",
+      collapsed: true,
+      items: [
+        "practical/case-study-warehouse-robot",
+        "practical/case-study-humanoid-assistant",
+        "practical/case-study-sim-to-real",
+      ],
+    },
   ],
 };
 

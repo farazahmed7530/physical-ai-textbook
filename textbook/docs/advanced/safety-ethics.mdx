@@ -24,6 +24,76 @@ By the end of this chapter, you will be able to:
 - Design privacy-preserving robot systems
 - Navigate the regulatory landscape for robotics
 
+## Safety System Architecture
+
+A comprehensive robot safety system operates at multiple levels:
+
+```mermaid
+graph TB
+    subgraph "Monitoring Layer"
+        PROX[Proximity Sensors]
+        FORCE[Force Sensors]
+        VIS[Vision Safety]
+        STATE[State Monitor]
+    end
+
+    subgraph "Safety Logic"
+        RISK[Risk Assessment]
+        ZONE[Zone Management]
+        LIMIT[Limit Checking]
+        PRED[Collision Prediction]
+    end
+
+    subgraph "Response Layer"
+        SLOW[Speed Reduction]
+        STOP[Emergency Stop]
+        SAFE[Safe Position]
+        ALERT[Alert System]
+    end
+
+    PROX --> ZONE
+    FORCE --> LIMIT
+    VIS --> PRED
+    STATE --> RISK
+    ZONE --> SLOW
+    LIMIT --> STOP
+    PRED --> SLOW
+    RISK --> SAFE
+    STOP --> ALERT
+```
+
+### Safety Data Flow
+
+```mermaid
+flowchart LR
+    subgraph Sensors
+        S1[Proximity]
+        S2[Force/Torque]
+        S3[Vision]
+    end
+
+    subgraph Processing
+        FUSE[Sensor Fusion]
+        ASSESS[Risk Assessment]
+        DECIDE[Decision Logic]
+    end
+
+    subgraph Actions
+        NORMAL[Normal Operation]
+        REDUCED[Reduced Speed]
+        ESTOP[Emergency Stop]
+    end
+
+    S1 --> FUSE
+    S2 --> FUSE
+    S3 --> FUSE
+    FUSE --> ASSESS
+    ASSESS --> DECIDE
+    DECIDE --> NORMAL
+    DECIDE --> REDUCED
+    DECIDE --> ESTOP
+```
+
 ## Safety Principles
 
 ### ISO Safety Standards
@@ -391,9 +461,11 @@ Safety and ethics must be integrated into every stage of robot development, from
 - Ethical considerations include accountability, privacy, and fairness
 - Explainability builds trust and enables oversight
 
-:::tip Key Takeaway
+<div className="key-takeaway">
+
 Safety and ethics are not afterthoughts—they must be designed into robot systems from the beginning and continuously evaluated throughout the system lifecycle.
-:::
+
+</div>
 
 ## Further Reading
 

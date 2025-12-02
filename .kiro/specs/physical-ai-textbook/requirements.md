@@ -42,6 +42,23 @@ This document specifies the requirements for a Physical AI & Humanoid Robotics t
 3. WHEN a user navigates between chapters THEN the Docusaurus_Platform SHALL maintain consistent styling and navigation elements
 4. WHEN the platform loads THEN the Docusaurus_Platform SHALL display responsive layouts for desktop and mobile devices
 
+### Requirement 1.5: Educative-Style Course Structure
+
+**User Story:** As a learner, I want the course structured like professional learning platforms (Educative), so that I can follow a clear learning path with defined outcomes.
+
+#### Acceptance Criteria
+
+1. WHEN a user accesses the course THEN the Content_System SHALL display a "What is Physical AI System Design?" introduction with real-world scenario hook
+2. WHEN a user views the introduction THEN the Content_System SHALL present "Who is this course for?" section listing target audiences (robotics engineers, AI/ML engineers, backend developers, product managers, interview candidates)
+3. WHEN a user views prerequisites THEN the Content_System SHALL list required knowledge (Python, basic ML, Linux) with links to recommended resources
+4. WHEN a user views course expectations THEN the Content_System SHALL describe learning outcomes, real-world case studies approach, and hands-on projects
+5. WHEN a user views course structure THEN the Content_System SHALL display a visual roadmap with time estimates per module
+6. WHEN a user starts any chapter THEN the Content_System SHALL display clear "Learning Objectives" at the beginning
+7. WHEN a user reads chapter content THEN the Content_System SHALL include "Key Takeaway" highlight boxes for critical insights
+8. WHEN a user completes a chapter THEN the Content_System SHALL provide a "Summary" section with bullet points and next chapter link
+9. WHEN presenting complex topics THEN the Content_System SHALL include comparison tables (e.g., Digital AI vs Physical AI, Simulation vs Real World)
+10. WHEN a user wants to practice THEN the Content_System SHALL provide "Hands-on Exercise" sections with step-by-step instructions
+
 ### Requirement 2: Course Content Structure - Quarter Overview
 
 **User Story:** As a student, I want comprehensive course content covering Physical AI and Humanoid Robotics across a full quarter, so that I can gain practical knowledge bridging digital AI to physical robotics.

@@ -24,6 +24,82 @@ By the end of this chapter, you will be able to:
 - Explain Visual SLAM components and workflow
 - Apply pose estimation for objects and humans
 
+## Computer Vision System Architecture
+
+A complete robot vision system integrates multiple processing stages:
+
+```mermaid
+graph TB
+    subgraph "Sensor Layer"
+        RGB[RGB Camera]
+        DEPTH[Depth Camera]
+        LIDAR[LiDAR]
+    end
+
+    subgraph "Preprocessing"
+        CALIB[Calibration]
+        FILT[Filtering]
+        SYNC[Synchronization]
+    end
+
+    subgraph "Perception"
+        DET[Object Detection]
+        SEG[Segmentation]
+        POSE[Pose Estimation]
+        TRACK[Tracking]
+    end
+
+    subgraph "Understanding"
+        SCENE[Scene Graph]
+        SPATIAL[Spatial Reasoning]
+        PRED[Prediction]
+    end
+
+    RGB --> CALIB
+    DEPTH --> CALIB
+    LIDAR --> FILT
+    CALIB --> SYNC
+    FILT --> SYNC
+    SYNC --> DET
+    SYNC --> SEG
+    DET --> POSE
+    DET --> TRACK
+    SEG --> SCENE
+    POSE --> SCENE
+    TRACK --> PRED
+    SCENE --> SPATIAL
+```
+
+### Vision Pipeline Data Flow
+
+```mermaid
+flowchart LR
+    subgraph Input
+        IMG[Image Frame]
+        PC[Point Cloud]
+    end
+
+    subgraph Processing
+        FEAT[Feature Extraction]
+        MATCH[Matching]
+        FUSE[Sensor Fusion]
+    end
+
+    subgraph Output
+        OBJ[Object List]
+        MAP[3D Map]
+        POSE[Robot Pose]
+    end
+
+    IMG --> FEAT
+    PC --> FUSE
+    FEAT --> MATCH
+    MATCH --> FUSE
+    FUSE --> OBJ
+    FUSE --> MAP
+    FUSE --> POSE
+```
+
 ## Image Processing Fundamentals
 
 ### Image Representation
@@ -288,9 +364,11 @@ Computer vision provides robots with the ability to understand their visual envi
 - Depth perception enables 3D understanding of the environment
 - Visual SLAM combines vision with localization and mapping
 
-:::tip Key Takeaway
+<div className="key-takeaway">
+
 Modern robotics vision systems combine classical computer vision techniques with deep learning to achieve robust perception in real-world environments.
-:::
+
+</div>
 
 ## Further Reading
 
